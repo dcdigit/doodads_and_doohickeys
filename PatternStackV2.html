@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Tiles V6: Organic Flow</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            color: #ccc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 320px;
+            background: #111;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        h2 { margin: 0 0 5px 0; color: #fff; font-size: 1.1rem; letter-spacing: 1px; }
+        .subtitle { font-size: 0.8rem; color: #00ff88; margin-bottom: 10px; font-weight:bold;}
+        
+        .section-title { 
+            font-size: 0.7rem; 
+            color: #888; 
+            text-transform: uppercase; 
+            margin-top: 15px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px;}
+        .row-inputs { display: flex; gap: 10px; }
+        .input-wrapper { display: flex; flex-direction: column; flex: 1; }
+        
+        /* Inputs */
+        input[type=number] {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 6px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box; 
+            font-family: monospace;
+        }
+        input[type=number]:focus { border-color: #00ff88; outline: none; }
+
+        label { font-size: 0.75rem; display: flex; justify-content: space-between; color: #aaa; }
+
+        /* Sliders */
+        input[type=range] {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            appearance: none;
+            outline: none;
+            opacity: 0.8;
+            border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #888;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+        input[type=range]:hover::-webkit-slider-thumb { background: #00ff88; }
+
+        /* Checkboxes */
+        .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px;}
+        .checkbox-item { display: flex; align-items: center; font-size: 0.8rem; gap: 5px; cursor: pointer; }
+        input[type=checkbox] { accent-color: #00ff88; }
+
+        /* Buttons */
+        button {
+            padding: 10px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            transition: 0.2s;
+            margin-top: 5px;
+        }
+        button:hover { background: #333; border-color: #666; }
+        button.primary { background: #00ff88; color: #000; border: none; }
+        button.primary:hover { background: #fff; }
+
+        /* Active Zone Indicator */
+        #active-zone-display {
+            background: #1a1a1a;
+            padding: 10px;
+            border-left: 3px solid #00ff88;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+        
+        .loading-text { color: #555; font-size: 0.7rem; font-style: italic; display:none; }
+
+        /* --- CANVAS AREA --- */
+        #canvas-wrapper {
+            flex-grow: 1;
+            background-color: #080808;
+            background-image: 
+                linear-gradient(#151515 1px, transparent 1px),
+                linear-gradient(90deg, #151515 1px, transparent 1px);
+            background-size: 40px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border: 1px solid #333;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Goo Architect</h2>
+        <div class="subtitle">V6: Organic Flow</div>
+        
+        <div class="section-title">Canvas Dimensions</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>W</label><input type="number" id="cvsW" value="800" onchange="updateCanvasSize()"></div>
+            <div class="input-wrapper"><label>H</label><input type="number" id="cvsH" value="800" onchange="updateCanvasSize()"></div>
+        </div>
+
+        <div class="section-title">Macro Layout</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>Cols</label><input type="number" id="macroCols" value="1" min="1" max="5" onchange="updateMacroLayout()"></div>
+            <div class="input-wrapper"><label>Rows</label><input type="number" id="macroRows" value="2" min="1" max="5" onchange="updateMacroLayout()"></div>
+        </div>
+
+        <div id="active-zone-display">
+            Selected Zone: <span id="zone-label" style="font-weight:bold; color:#00ff88">0, 0</span><br>
+            <span style="font-size:0.7rem; color:#666">Click canvas to select zone.</span>
+        </div>
+        
+        <div class="checkbox-group" style="margin-top:10px; border-bottom: 1px solid #333; padding-bottom:10px;">
+            <label class="checkbox-item">
+                <input type="checkbox" id="autoRegen" checked> Auto-Regenerate on Change
+            </label>
+        </div>
+
+        <button onclick="copySettingsToAll()">Sync Settings to All Zones</button>
+
+        <div class="section-title">Zone Grid</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>Cols</label><input type="number" id="gridCols" class="zone-input regen-trigger"></div>
+            <div class="input-wrapper"><label>Rows</label><input type="number" id="gridRows" class="zone-input regen-trigger"></div>
+        </div>
+        <div class="control-group">
+            <label>Chaos (Jitter Flow)</label>
+            <input type="range" id="jitterSlider" class="zone-input" min="0" max="100">
+        </div>
+
+        <div class="section-title">Zone Shapes</div>
+        <div class="control-group">
+            <label>Min Size</label>
+            <input type="range" id="minSizeSlider" class="zone-input regen-trigger" min="5" max="300">
+        </div>
+        <div class="control-group">
+            <label>Max Size</label>
+            <input type="range" id="maxSizeSlider" class="zone-input regen-trigger" min="5" max="300">
+        </div>
+        <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" id="chkSquare" class="zone-input regen-trigger"> Rect</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkCircle" class="zone-input regen-trigger"> Circle</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkTri" class="zone-input regen-trigger"> Tri</label>
+        </div>
+        <div class="control-group" style="margin-top:10px;">
+            <label>Rotation Flow</label>
+            <input type="range" id="rotSlider" class="zone-input" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="section-title">Zone Style</div>
+        <div class="control-group">
+            <label>Hollow % (Reshuffles)</label>
+            <input type="range" id="hollowSlider" class="zone-input" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Outline Width</label>
+            <input type="range" id="strokeSlider" class="zone-input" min="1" max="40">
+        </div>
+
+        <div class="section-title">Zone Physics</div>
+        <div class="control-group">
+            <label>Melt (Blur)</label>
+            <input type="range" id="meltSlider" class="zone-input" min="0" max="200">
+        </div>
+        <div class="control-group">
+            <label>Solidify (Threshold)</label>
+            <input type="range" id="threshSlider" class="zone-input" min="0.01" max="0.99" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Zone Color</label>
+            <input type="color" id="colorPicker" class="zone-input" style="height:30px; width: 100%">
+        </div>
+        
+        <button class="primary" onclick="scrambleSeed()">Scramble Randomness</button>
+        <button onclick="saveArt()">Save Image</button>
+        <span id="loading" class="loading-text">Processing transparency...</span>
+    </div>
+
+    <div id="canvas-wrapper">
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        // Global Canvas Settings
+        let cW = 800;
+        let cH = 800;
+        let mCols = 1;
+        let mRows = 2;
+
+        // State
+        let regions = []; 
+        let activeIndex = 0; 
+        
+        // P5 Graphics
+        let mainCanvas;
+        let helperGraphics; 
+
+        // Default Config
+        const defaultConfig = {
+            gCols: 6, gRows: 6, jitter: 10,
+            minS: 30, maxS: 100,
+            isRect: true, isCirc: true, isTri: false,
+            rot: 0.5,
+            hollow: 0.0, stroke: 10,
+            melt: 60, thresh: 0.5,
+            color: '#00ff88',
+            seed: 100
+        };
+
+        function setup() {
+            mainCanvas = createCanvas(cW, cH);
+            mainCanvas.parent('canvas-container');
+            mainCanvas.mousePressed(handleCanvasClick);
+            
+            // Reusable buffer with extra height for bleed
+            helperGraphics = createGraphics(cW, cH + 200);
+
+            updateMacroLayout(true); 
+            bindUI();
+        }
+
+        function draw() {
+            background(20);
+
+            let cellW = width / mCols;
+            let cellH = height / mRows;
+
+            // Render loop
+            let idx = 0;
+            for(let r=0; r<mRows; r++){
+                for(let c=0; c<mCols; c++){
+                    
+                    let x = c * cellW;
+                    let y = r * cellH;
+                    
+                    renderRegion(idx, x, y, cellW, cellH, r, mRows);
+                    
+                    if(idx === activeIndex) {
+                        push();
+                        noFill();
+                        stroke('#00ff88');
+                        strokeWeight(2);
+                        rect(x + 2, y + 2, cellW - 4, cellH - 4);
+                        noStroke();
+                        fill('#00ff88');
+                        textSize(12);
+                        text(`EDITING`, x + 10, y + 20);
+                        pop();
+                    }
+                    idx++;
+                }
+            }
+        }
+
+        // --- CORE LOGIC ---
+
+        function renderRegion(idx, x, y, w, h, rowIdx, totalRows) {
+            let cfg = regions[idx];
+            
+            let isTopMacro = (rowIdx === 0);
+            let isBottomMacro = (rowIdx === totalRows - 1);
+            let isSingleRow = (totalRows === 1);
+            
+            // High bleed ensures hanging shapes are drawn fully
+            let bleed = 200; 
+            if(helperGraphics.width !== w || helperGraphics.height !== h + bleed) {
+                helperGraphics.resizeCanvas(w, h + bleed); 
+            }
+
+            helperGraphics.push();
+            helperGraphics.background(0); // This black background is what we will delete later
+            
+            helperGraphics.drawingContext.shadowColor = 'white';
+            helperGraphics.drawingContext.shadowBlur = cfg.melt;
+            helperGraphics.fill(255);
+            helperGraphics.noStroke();
+
+            // 1. MAIN SEED: Determines types, sizes, and aspect ratios
+            // This stays constant unless you hit "Scramble" or change geometric props
+            randomSeed(cfg.seed);
+            
+            let gridRows = cfg.gRows;
+            let rowH = h / gridRows; // Height of one grid row
+            
+            // --- STITCH MATH ---
+            let startY, endY;
+            if (isSingleRow) {
+                startY = rowH/2; endY = h - rowH/2;
+            } else if (isTopMacro) {
+                startY = rowH/2; endY = h; 
+            } else if (isBottomMacro) {
+                startY = rowH * 1.0; endY = h - rowH/2;
+            } else {
+                startY = rowH * 1.0; endY = h;
+            }
+
+            // Shape Types
+            let types = [];
+            if(cfg.isRect) types.push('rect');
+            if(cfg.isCirc) types.push('circle');
+            if(cfg.isTri) types.push('tri');
+            if(types.length === 0) types.push('rect');
+
+            for (let r = 0; r < gridRows; r++) {
+                // Calculate Row Y Position
+                let by;
+                if (gridRows > 1) {
+                    by = map(r, 0, gridRows - 1, startY, endY);
+                } else {
+                    by = h / 2;
+                }
+
+                for (let c = 0; c < cfg.gCols; c++) {
+                    let cellW = w / cfg.gCols;
+                    let bx = c * cellW + cellW/2;
+                    
+                    // --- THE NEW "SALTED" MATH ---
+                    
+                    // Jitter Calculation:
+                    // We use noise to generate the jitter. 
+                    // The 3rd dimension of the noise is the slider value + seed.
+                    // This means dragging the slider "animates" the noise field.
+                    let jitterSalt = cfg.jitter * 0.05 + cfg.seed;
+                    let nX = noise(c * 0.5, r * 0.5, jitterSalt);
+                    let nY = noise(c * 0.5 + 100, r * 0.5 + 100, jitterSalt);
+                    
+                    // Remap noise (0-1) to (-1 to 1) and multiply by jitter magnitude
+                    let jX = (nX - 0.5) * 4 * cfg.jitter;
+                    let jY = (nY - 0.5) * 4 * cfg.jitter;
+
+                    let px = bx + jX;
+                    let py = by + jY;
+
+                    // Size and Type (From Main Seed)
+                    let s = random(cfg.minS, cfg.maxS);
+                    let type = random(types);
+                    
+                    // RECTANGLE VARIANCE
+                    let finalW = s;
+                    let finalH = s;
+                    
+                    if(type === 'rect') {
+                        // Random aspect ratio between 0.6 (tall) and 1.6 (wide)
+                        let aspect = random(0.6, 1.6);
+                        finalW = s * aspect;
+                        finalH = s / aspect; 
+                    }
+
+                    // Rotation Flow
+                    // We also use noise for rotation so it feels like a vector field
+                    let rotSalt = cfg.rot * 10 + cfg.seed;
+                    let rotNoise = noise(px * 0.01, py * 0.01, rotSalt);
+                    // Map noise to full circle based on slider intensity
+                    let ang = (rotNoise * TWO_PI * 2) * cfg.rot;
+
+                    // Hollow Reshuffle
+                    // Deterministic hash based on hollow slider
+                    let hollowSalt = (px + py * w + (cfg.hollow * 99999));
+                    let hollowRand = Math.abs(Math.sin(hollowSalt) * 10000) % 1;
+                    let isHollow = hollowRand < cfg.hollow;
+
+                    if(isHollow) {
+                        helperGraphics.noFill();
+                        helperGraphics.stroke(255);
+                        helperGraphics.strokeWeight(cfg.stroke);
+                    } else {
+                        helperGraphics.fill(255);
+                        helperGraphics.noStroke();
+                    }
+
+                    drawSeamlessShape(helperGraphics, type, px, py, finalW, finalH, ang, w, h + bleed);
+                }
+            }
+            helperGraphics.pop();
+
+            // 1. Create Threshold Image
+            let img = helperGraphics.get();
+            img.filter(THRESHOLD, cfg.thresh);
+            
+            // 2. TRANSPARENCY MASKING
+            img.loadPixels();
+            for (let i = 0; i < img.pixels.length; i += 4) {
+                if (img.pixels[i] === 0) {
+                    img.pixels[i + 3] = 0;
+                }
+            }
+            img.updatePixels();
+
+            // 3. Render
+            tint(color(cfg.color));
+            image(img, x, y, w, h + bleed);
+            noTint();
+        }
+
+        function drawSeamlessShape(pg, type, x, y, w, h, angle, boundsW, boundsH) {
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    pg.push();
+                    pg.translate(x + (dx * boundsW), y + (dy * boundsH));
+                    pg.rotate(angle);
+
+                    if (type === 'rect') {
+                        pg.rectMode(CENTER);
+                        pg.rect(0, 0, w, h);
+                    } 
+                    else if (type === 'circle') {
+                        pg.ellipse(0, 0, w, h);
+                    } 
+                    else if (type === 'tri') {
+                        let r = w / 2;
+                        // Equilateral-ish triangle based on Width
+                        pg.triangle(0, -r, r*0.866, r*0.5, -r*0.866, r*0.5);
+                    }
+                    pg.pop();
+                }
+            }
+        }
+
+        // --- INTERACTION ---
+
+        function handleCanvasClick() {
+            let cellW = width / mCols;
+            let cellH = height / mRows;
+            let col = Math.floor(mouseX / cellW);
+            let row = Math.floor(mouseY / cellH);
+
+            if(col >= 0 && col < mCols && row >= 0 && row < mRows) {
+                let newIndex = row * mCols + col;
+                activeIndex = newIndex;
+                select('#zone-label').html(`${col}, ${row}`);
+                loadUIFromRegion(regions[activeIndex]);
+            }
+        }
+
+        function updateCanvasSize() {
+            let w = parseInt(select('#cvsW').value()) || 800;
+            let h = parseInt(select('#cvsH').value()) || 800;
+            cW = w; cH = h;
+            resizeCanvas(cW, cH);
+        }
+
+        function updateMacroLayout(forceReset = false) {
+            mCols = parseInt(select('#macroCols').value());
+            mRows = parseInt(select('#macroRows').value());
+            let totalRegions = mCols * mRows;
+            
+            if(forceReset) regions = [];
+            while(regions.length < totalRegions) {
+                regions.push({ ...defaultConfig, seed: floor(random(10000)) });
+            }
+            if(regions.length > totalRegions) regions = regions.slice(0, totalRegions);
+            if(activeIndex >= regions.length) activeIndex = 0;
+            loadUIFromRegion(regions[activeIndex]);
+        }
+
+        function scrambleSeed() {
+            regions[activeIndex].seed = floor(random(10000));
+        }
+
+        function copySettingsToAll() {
+            let src = regions[activeIndex];
+            for(let i=0; i<regions.length; i++) {
+                if(i === activeIndex) continue;
+                let oldSeed = regions[i].seed;
+                regions[i] = { ...src };
+                regions[i].seed = oldSeed; 
+            }
+        }
+
+        function loadUIFromRegion(cfg) {
+            select('#gridCols').value(cfg.gCols);
+            select('#gridRows').value(cfg.gRows);
+            select('#jitterSlider').value(cfg.jitter);
+            select('#minSizeSlider').value(cfg.minS);
+            select('#maxSizeSlider').value(cfg.maxS);
+            select('#chkSquare').checked(cfg.isRect);
+            select('#chkCircle').checked(cfg.isCirc);
+            select('#chkTri').checked(cfg.isTri);
+            select('#rotSlider').value(cfg.rot);
+            select('#hollowSlider').value(cfg.hollow);
+            select('#strokeSlider').value(cfg.stroke);
+            select('#meltSlider').value(cfg.melt);
+            select('#threshSlider').value(cfg.thresh);
+            select('#colorPicker').value(cfg.color);
+        }
+
+        function bindUI() {
+            let inputs = document.querySelectorAll('.zone-input');
+            inputs.forEach(el => {
+                el.addEventListener('input', (e) => {
+                    if(select('#autoRegen').checked() && el.classList.contains('regen-trigger')) {
+                       regions[activeIndex].seed = floor(random(10000));
+                    }
+                    updateRegionFromUI();
+                });
+            });
+        }
+
+        function updateRegionFromUI() {
+            let cfg = regions[activeIndex];
+            cfg.gCols = parseInt(select('#gridCols').value());
+            cfg.gRows = parseInt(select('#gridRows').value());
+            cfg.jitter = parseInt(select('#jitterSlider').value());
+            cfg.minS = parseInt(select('#minSizeSlider').value());
+            cfg.maxS = parseInt(select('#maxSizeSlider').value());
+            
+            cfg.isRect = select('#chkSquare').checked();
+            cfg.isCirc = select('#chkCircle').checked();
+            cfg.isTri = select('#chkTri').checked();
+
+            cfg.rot = parseFloat(select('#rotSlider').value());
+            cfg.hollow = parseFloat(select('#hollowSlider').value());
+            cfg.stroke = parseInt(select('#strokeSlider').value());
+            cfg.melt = parseInt(select('#meltSlider').value());
+            cfg.thresh = parseFloat(select('#threshSlider').value());
+            cfg.color = select('#colorPicker').value();
+        }
+
+        function saveArt() {
+            saveCanvas('liquid_tiles_v6_organic_' + mCols + 'x' + mRows, 'png');
+        }
+    </script>
+</body>
+</html>

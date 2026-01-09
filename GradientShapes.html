@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parametric Shape Gradient Generator</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: sans-serif; }
+        #canvas-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100vw; 
+        }
+        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    </style>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- CONFIGURATION & STATE ---
+        const config = {
+            // Canvas Settings
+            width: 800,
+            height: 800,
+            
+            // Appearance
+            bgColor: '#111111',
+            shapeColor: '#ffffff',
+            
+            // Grid / Density
+            gridX: 20,
+            gridY: 20,
+            
+            // Shape Settings
+            shapeType: 0, // 0: Circle, 1: Square, 2: Rect/Line
+            rotation: 0,
+            
+            // Gradient Logic
+            gradientType: 0, // 0: Radial, 1: Linear X, 2: Linear Y
+            invertGradient: false,
+            
+            // Sizing Logic
+            minSize: 0.1,
+            maxSize: 0.9,
+            smoothing: 0.05, // Anti-aliasing edge
+            
+            // Export
+            saveImage: () => saveCanvas()
+        };
+
+        // --- SHADER CODE (GLSL) ---
+        // This runs on the GPU for every single pixel.
+        
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uAspect;
+            uniform vec2 uGrid;
+            uniform vec3 uColor;
+            uniform vec3 uBgColor;
+            uniform float uShapeType;
+            uniform float uRotation;
+            uniform float uGradientType;
+            uniform float uMinSize;
+            uniform float uMaxSize;
+            uniform float uSmoothing;
+            uniform bool uInvert;
+
+            varying vec2 vUv;
+
+            // Rotation Matrix
+            vec2 rotate(vec2 v, float a) {
+                float s = sin(a);
+                float c = cos(a);
+                mat2 m = mat2(c, -s, s, c);
+                return m * v;
+            }
+
+            // Shape Functions (Signed Distance Fields)
+            float sdCircle(vec2 p, float r) {
+                return length(p) - r;
+            }
+
+            float sdBox(vec2 p, vec2 b) {
+                vec2 d = abs(p) - b;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+            }
+
+            void main() {
+                // 1. Setup Grid Coordinates
+                vec2 st = vUv;
+                
+                // Adjust for density
+                vec2 gridSt = st * uGrid;
+                
+                // Get Cell ID (0,0 to gridX,gridY)
+                vec2 cellId = floor(gridSt);
+                
+                // Get coordinate inside the cell (-0.5 to 0.5)
+                vec2 cellUv = fract(gridSt) - 0.5;
+
+                // 2. Calculate Gradient Influence
+                // Normalize cell ID back to 0-1 range for gradient calculation
+                vec2 normId = cellId / uGrid; 
+                // Center offset
+                normId += (0.5 / uGrid); 
+
+                float influence = 0.0;
+
+                if (uGradientType == 0.0) { 
+                    // Radial: Distance from center
+                    // Adjust aspect ratio for radial gradient so it's a perfect circle
+                    vec2 aspectCorrected = (normId - 0.5);
+                    aspectCorrected.x *= uAspect;
+                    influence = length(aspectCorrected) * 2.0; 
+                } else if (uGradientType == 1.0) { 
+                    // Linear X
+                    influence = normId.x;
+                } else { 
+                    // Linear Y
+                    influence = normId.y;
+                }
+
+                if (uInvert) influence = 1.0 - influence;
+                
+                // Clamp influence
+                influence = clamp(influence, 0.0, 1.0);
+
+                // 3. Determine Parametric Size
+                float currentSize = mix(uMaxSize, uMinSize, influence);
+                // Halve it because SDFs work from center
+                float r = currentSize * 0.5; 
+
+                // 4. Draw Shape
+                float dist = 0.0;
+                
+                // Apply local rotation to the shape inside the cell
+                vec2 rotatedUv = rotate(cellUv, uRotation);
+
+                if (uShapeType == 0.0) {
+                    // Circle
+                    dist = sdCircle(rotatedUv, r);
+                } else if (uShapeType == 1.0) {
+                    // Square
+                    dist = sdBox(rotatedUv, vec2(r));
+                } else {
+                    // Line / Rectangle (Non-uniform scaling)
+                    // If it's a line, we usually want it to stretch fully across one axis
+                    // So we manipulate the box bounds based on size
+                    dist = sdBox(rotatedUv, vec2(0.5, r)); 
+                }
+
+                // 5. Render
+                // Smoothstep provides anti-aliasing
+                float alpha = 1.0 - smoothstep(0.0, uSmoothing, dist);
+                
+                vec3 finalColor = mix(uBgColor, uColor, alpha);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        
+        // Orthographic camera is best for 2D/Cad-like tools
+        // The frustum size will be updated in resize
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(config.width, config.height);
+        container.appendChild(renderer.domElement);
+
+        // --- MESH & MATERIAL ---
+        const geometry = new THREE.PlaneGeometry(2, 2); // Fills screen in standard coords
+        
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uAspect: { value: 1.0 },
+                uGrid: { value: new THREE.Vector2(config.gridX, config.gridY) },
+                uColor: { value: new THREE.Color(config.shapeColor) },
+                uBgColor: { value: new THREE.Color(config.bgColor) },
+                uShapeType: { value: config.shapeType },
+                uRotation: { value: config.rotation },
+                uGradientType: { value: config.gradientType },
+                uMinSize: { value: config.minSize },
+                uMaxSize: { value: config.maxSize },
+                uSmoothing: { value: config.smoothing },
+                uInvert: { value: config.invertGradient }
+            }
+        });
+
+        const quad = new THREE.Mesh(geometry, material);
+        scene.add(quad);
+
+        // --- FUNCTIONS ---
+
+        function updateUniforms() {
+            material.uniforms.uGrid.value.set(config.gridX, config.gridY);
+            material.uniforms.uColor.value.set(config.shapeColor);
+            material.uniforms.uBgColor.value.set(config.bgColor);
+            material.uniforms.uShapeType.value = config.shapeType;
+            material.uniforms.uRotation.value = config.rotation;
+            material.uniforms.uGradientType.value = config.gradientType;
+            material.uniforms.uMinSize.value = config.minSize;
+            material.uniforms.uMaxSize.value = config.maxSize;
+            material.uniforms.uSmoothing.value = config.smoothing;
+            material.uniforms.uInvert.value = config.invertGradient;
+            
+            // Aspect handling for non-square grid cells if desired, 
+            // but here we usually want 1:1 shape aspect inside cells.
+            material.uniforms.uAspect.value = config.width / config.height;
+        }
+
+        function resizeCanvas() {
+            renderer.setSize(config.width, config.height);
+            updateUniforms();
+        }
+
+        function saveCanvas() {
+            const link = document.createElement('a');
+            link.download = `shape-gradient-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- GUI SETUP ---
+        const gui = new GUI({ title: 'Gradient Settings' });
+
+        const folderCanvas = gui.addFolder('Canvas');
+        folderCanvas.add(config, 'width', 100, 4096, 1).onChange(resizeCanvas);
+        folderCanvas.add(config, 'height', 100, 4096, 1).onChange(resizeCanvas);
+        folderCanvas.addColor(config, 'bgColor').onChange(updateUniforms);
+        folderCanvas.addColor(config, 'shapeColor').onChange(updateUniforms);
+
+        const folderGrid = gui.addFolder('Grid Distribution');
+        folderGrid.add(config, 'gridX', 1, 200, 1).name('Columns').onChange(updateUniforms);
+        folderGrid.add(config, 'gridY', 1, 200, 1).name('Rows').onChange(updateUniforms);
+
+        const folderShape = gui.addFolder('Shape Parameters');
+        folderShape.add(config, 'shapeType', { Circle: 0, Square: 1, Line: 2 }).onChange(updateUniforms);
+        folderShape.add(config, 'rotation', 0, Math.PI * 2).name('Rotation (Rad)').onChange(updateUniforms);
+        folderShape.add(config, 'smoothing', 0.001, 0.5).name('Edge Softness').onChange(updateUniforms);
+
+        const folderGradient = gui.addFolder('Gradient Control');
+        folderGradient.add(config, 'gradientType', { Radial: 0, LinearX: 1, LinearY: 2 }).onChange(updateUniforms);
+        folderGradient.add(config, 'invertGradient').onChange(updateUniforms);
+        folderGradient.add(config, 'minSize', 0, 1.5).name('Start Size').onChange(updateUniforms);
+        folderGradient.add(config, 'maxSize', 0, 1.5).name('End Size').onChange(updateUniforms);
+
+        gui.add(config, 'saveImage').name('Download Image');
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        // Initial trigger
+        updateUniforms();
+        animate();
+
+    </script>
+</body>
+</html>

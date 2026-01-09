@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3js Cylinder Visualizer</title>
+    <style>
+        /* Remove all margin and padding to make the canvas fill the screen */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #111; /* Dark background */
+        }
+    </style>
+</head>
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.skypack.dev/three@0.132.2/build/three.module.js",
+                "three/addons/": "https://cdn.skypack.dev/three@0.132.2/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        // Import OrbitControls to allow mouse interaction (rotate, zoom)
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ---------------------------------
+        // 1. Scene and Core Setup
+        // ---------------------------------
+
+        // The Scene is the container for all your objects, lights, and cameras
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111);
+
+        // The Camera is what the user sees. 
+        // PerspectiveCamera(Field of View, Aspect Ratio, Near Clip, Far Clip)
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(5, 5, 10); // Move camera back and up
+
+        // The Renderer draws the scene from the camera's perspective
+        const renderer = new THREE.WebGLRenderer({ antialias: true }); // antialias smooths edges
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // ---------------------------------
+        // 2. Controls
+        // ---------------------------------
+
+        // OrbitControls allow you to rotate (drag), zoom (scroll), and pan (right-click)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Adds a smooth "inertia" to rotation
+        controls.dampingFactor = 0.05;
+
+        // ---------------------------------
+        // 3. Lights
+        // ---------------------------------
+
+        // Ambient light fills the scene with a soft, general light
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.5); // (color, intensity)
+        scene.add(ambientLight);
+
+        // Point light acts like a lightbulb, casting shadows and creating highlights
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(10, 10, 10); // Position the light
+        scene.add(pointLight);
+
+        // ---------------------------------
+        // 4. Create the Objects
+        // ---------------------------------
+
+        // Create a Group to hold both the cylinder and the lines.
+        // This lets us rotate them all together as a single unit.
+        const objectGroup = new THREE.Group();
+        scene.add(objectGroup);
+
+        // Define cylinder properties
+        const cylinderRadius = 3;
+        const cylinderHeight = 8;
+        const lineCount = 20; // How many lines to draw
+
+        // --- Create the Cylinder ---
+        const cylinderGeom = new THREE.CylinderGeometry(
+            cylinderRadius,  // radiusTop
+            cylinderRadius,  // radiusBottom
+            cylinderHeight,  // height
+            32               // radialSegments (how round it is)
+        );
+        
+        // Use a semi-transparent material so we can see the lines
+        const cylinderMat = new THREE.MeshStandardMaterial({
+            color: 0x0077ff,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide // Render both inside and outside faces
+        });
+        
+        const cylinder = new THREE.Mesh(cylinderGeom, cylinderMat);
+        objectGroup.add(cylinder); // Add to the group
+
+        // --- Create the Lines ---
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+        const halfHeight = cylinderHeight / 2;
+
+        for (let i = 0; i < lineCount; i++) {
+            // Calculate the angle for this line
+            // (i / lineCount) gives a fraction from 0 to 1
+            // Multiply by 2 * PI to get a full circle in radians
+            const angle = (i / lineCount) * Math.PI * 2;
+
+            // Use trigonometry (cos and sin) to find the (x, z) position on the circle
+            const x = cylinderRadius * Math.cos(angle);
+            const z = cylinderRadius * Math.sin(angle);
+
+            // Create the points for the line
+            const points = [];
+            points.push(new THREE.Vector3(x, -halfHeight, z)); // Bottom point
+            points.push(new THREE.Vector3(x, halfHeight, z));  // Top point
+
+            // Create the geometry from the points
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+
+            // Create the final line object and add it to the group
+            const line = new THREE.Line(lineGeometry, lineMaterial);
+            objectGroup.add(line);
+        }
+
+        // ---------------------------------
+        // 5. Animation Loop
+        // ---------------------------------
+
+        function animate() {
+            requestAnimationFrame(animate); // Tell the browser to run this function on the next frame
+
+            // Optional: Animate the group's rotation
+            objectGroup.rotation.y += 0.005;
+            objectGroup.rotation.x += 0.001;
+
+            // Update controls for damping
+            controls.update();
+
+            // Render the scene from the camera's point of view
+            renderer.render(scene, camera);
+        }
+
+        // ---------------------------------
+        // 6. Handle Window Resize
+        // ---------------------------------
+
+        window.addEventListener('resize', () => {
+            // Update camera aspect ratio
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            // Update renderer size
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start the animation loop!
+        animate();
+
+    </script>
+</body>
+</html>

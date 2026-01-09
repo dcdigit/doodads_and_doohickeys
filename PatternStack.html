@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goo Architect: Multi-Zone</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            color: #ccc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 320px;
+            background: #111;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        h2 { margin: 0 0 5px 0; color: #fff; font-size: 1.1rem; letter-spacing: 1px; }
+        .subtitle { font-size: 0.8rem; color: #666; margin-bottom: 10px;}
+        
+        .section-title { 
+            font-size: 0.7rem; 
+            color: #00ff88; 
+            text-transform: uppercase; 
+            margin-top: 15px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px;}
+        .row-inputs { display: flex; gap: 10px; }
+        .input-wrapper { display: flex; flex-direction: column; flex: 1; }
+        
+        /* Inputs */
+        input[type=number] {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 6px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box; 
+            font-family: monospace;
+        }
+        input[type=number]:focus { border-color: #00ff88; outline: none; }
+
+        label { font-size: 0.75rem; display: flex; justify-content: space-between; color: #aaa; }
+
+        /* Sliders */
+        input[type=range] {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            appearance: none;
+            outline: none;
+            opacity: 0.8;
+            border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #888;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+        input[type=range]:hover::-webkit-slider-thumb { background: #00ff88; }
+
+        /* Checkboxes */
+        .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px;}
+        .checkbox-item { display: flex; align-items: center; font-size: 0.8rem; gap: 5px; cursor: pointer; }
+        input[type=checkbox] { accent-color: #00ff88; }
+
+        /* Buttons */
+        button {
+            padding: 10px;
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            transition: 0.2s;
+            margin-top: 5px;
+        }
+        button:hover { background: #333; border-color: #666; }
+        button.primary { background: #00ff88; color: #000; border: none; }
+        button.primary:hover { background: #fff; }
+        
+        button.danger { border-color: #ff4444; color: #ff4444; }
+        button.danger:hover { background: #ff4444; color: white; }
+
+        /* Active Zone Indicator */
+        #active-zone-display {
+            background: #1a1a1a;
+            padding: 10px;
+            border-left: 3px solid #00ff88;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+
+        /* --- CANVAS AREA --- */
+        #canvas-wrapper {
+            flex-grow: 1;
+            background-color: #080808;
+            background-image: 
+                linear-gradient(#151515 1px, transparent 1px),
+                linear-gradient(90deg, #151515 1px, transparent 1px);
+            background-size: 40px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        canvas {
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border: 1px solid #333;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Goo Architect</h2>
+        <div class="subtitle">Multi-Zone Edition</div>
+        
+        <div class="section-title">Canvas Dimensions</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>W</label><input type="number" id="cvsW" value="800" onchange="updateCanvasSize()"></div>
+            <div class="input-wrapper"><label>H</label><input type="number" id="cvsH" value="800" onchange="updateCanvasSize()"></div>
+        </div>
+
+        <div class="section-title">Macro Layout (Divisions)</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>Cols</label><input type="number" id="macroCols" value="2" min="1" max="5" onchange="updateMacroLayout()"></div>
+            <div class="input-wrapper"><label>Rows</label><input type="number" id="macroRows" value="1" min="1" max="5" onchange="updateMacroLayout()"></div>
+        </div>
+
+        <div id="active-zone-display">
+            Selected Zone: <span id="zone-label" style="font-weight:bold; color:#00ff88">0, 0</span><br>
+            <span style="font-size:0.7rem; color:#666">Click canvas to select a different zone.</span>
+        </div>
+
+        <button onclick="copySettingsToAll()">Copy Current Settings to All</button>
+
+        <div class="section-title">Zone Grid</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>Cols</label><input type="number" id="gridCols" class="zone-input"></div>
+            <div class="input-wrapper"><label>Rows</label><input type="number" id="gridRows" class="zone-input"></div>
+        </div>
+        <div class="control-group">
+            <label>Chaos (Jitter)</label>
+            <input type="range" id="jitterSlider" class="zone-input" min="0" max="100">
+        </div>
+
+        <div class="section-title">Zone Shapes</div>
+        <div class="control-group">
+            <label>Min Size</label>
+            <input type="range" id="minSizeSlider" class="zone-input" min="5" max="300">
+        </div>
+        <div class="control-group">
+            <label>Max Size</label>
+            <input type="range" id="maxSizeSlider" class="zone-input" min="5" max="300">
+        </div>
+        <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" id="chkSquare" class="zone-input"> Square</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkCircle" class="zone-input"> Circle</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkTri" class="zone-input"> Tri</label>
+        </div>
+        <div class="control-group" style="margin-top:10px;">
+            <label>Rotation</label>
+            <input type="range" id="rotSlider" class="zone-input" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="section-title">Zone Style</div>
+        <div class="control-group">
+            <label>Hollow %</label>
+            <input type="range" id="hollowSlider" class="zone-input" min="0" max="1" step="0.05">
+        </div>
+        <div class="control-group">
+            <label>Outline Width</label>
+            <input type="range" id="strokeSlider" class="zone-input" min="1" max="40">
+        </div>
+
+        <div class="section-title">Zone Physics</div>
+        <div class="control-group">
+            <label>Melt (Blur)</label>
+            <input type="range" id="meltSlider" class="zone-input" min="0" max="100">
+        </div>
+        <div class="control-group">
+            <label>Solidify (Threshold)</label>
+            <input type="range" id="threshSlider" class="zone-input" min="0.01" max="0.99" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Zone Color</label>
+            <input type="color" id="colorPicker" class="zone-input" style="height:30px; width: 100%">
+        </div>
+        
+        <button class="primary" onclick="triggerRegen()">Regenerate Active Zone</button>
+        <button onclick="saveArt()">Save Image</button>
+    </div>
+
+    <div id="canvas-wrapper">
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        // Global Canvas Settings
+        let cW = 800;
+        let cH = 800;
+        let mCols = 2;
+        let mRows = 1;
+
+        // State
+        let regions = []; // Array of config objects
+        let activeIndex = 0; // Currently selected region index [0...n]
+        
+        // P5 Graphics
+        let mainCanvas;
+        let helperGraphics; // Reusable buffer for processing single regions
+
+        // Default Config for a region
+        const defaultConfig = {
+            gCols: 6, gRows: 6, jitter: 10,
+            minS: 30, maxS: 100,
+            isRect: true, isCirc: true, isTri: false,
+            rot: 0.5,
+            hollow: 0.0, stroke: 10,
+            melt: 30, thresh: 0.5,
+            color: '#00ff88',
+            seed: 100 // Visual seed
+        };
+
+        function setup() {
+            mainCanvas = createCanvas(cW, cH);
+            mainCanvas.parent('canvas-container');
+            mainCanvas.mousePressed(handleCanvasClick);
+            
+            // Temporary buffer for drawing logical operations
+            helperGraphics = createGraphics(cW, cH);
+
+            // Initialize Regions
+            updateMacroLayout(true); // true = force init
+
+            // Bind UI inputs to update logic
+            bindUI();
+        }
+
+        function draw() {
+            background(20);
+
+            // Calculate cell size
+            let cellW = width / mCols;
+            let cellH = height / mRows;
+
+            // Render each region
+            let idx = 0;
+            for(let r=0; r<mRows; r++){
+                for(let c=0; c<mCols; c++){
+                    let x = c * cellW;
+                    let y = r * cellH;
+                    
+                    renderRegion(idx, x, y, cellW, cellH);
+                    
+                    // Draw Selection Highlight
+                    if(idx === activeIndex) {
+                        push();
+                        noFill();
+                        stroke('#00ff88');
+                        strokeWeight(4);
+                        rect(x, y, cellW, cellH);
+                        // Add label
+                        noStroke();
+                        fill('#00ff88');
+                        textSize(12);
+                        text(`EDITING ZONE ${c},${r}`, x + 10, y + 20);
+                        pop();
+                    }
+                    
+                    idx++;
+                }
+            }
+        }
+
+        // --- CORE RENDERING LOGIC ---
+
+        function renderRegion(idx, x, y, w, h) {
+            let cfg = regions[idx];
+            
+            // Resize helper to match this specific cell
+            // We use one helper buffer to save memory, resizing it constantly is okay for this use case
+            if(helperGraphics.width !== w || helperGraphics.height !== h) {
+                helperGraphics.resizeCanvas(w, h); 
+            }
+
+            helperGraphics.push();
+            helperGraphics.background(0);
+            
+            // 1. Setup Goo Context
+            helperGraphics.drawingContext.shadowColor = 'white';
+            helperGraphics.drawingContext.shadowBlur = cfg.melt;
+            helperGraphics.fill(255);
+            helperGraphics.noStroke();
+
+            // 2. Generate/Draw Shapes based on Seed
+            randomSeed(cfg.seed);
+            
+            let cellW = w / cfg.gCols;
+            let cellH = h / cfg.gRows;
+            
+            // Active shapes
+            let types = [];
+            if(cfg.isRect) types.push('rect');
+            if(cfg.isCirc) types.push('circle');
+            if(cfg.isTri) types.push('tri');
+            if(types.length === 0) types.push('rect');
+
+            for (let r = 0; r < cfg.gRows; r++) {
+                for (let c = 0; c < cfg.gCols; c++) {
+                    let bx = c * cellW + cellW/2;
+                    let by = r * cellH + cellH/2;
+                    
+                    let px = bx + random(-cfg.jitter, cfg.jitter);
+                    let py = by + random(-cfg.jitter, cfg.jitter);
+                    let s = random(cfg.minS, cfg.maxS);
+                    let type = random(types);
+                    let ang = random(-PI * cfg.rot, PI * cfg.rot);
+                    let hollow = random() < cfg.hollow;
+
+                    if(hollow) {
+                        helperGraphics.noFill();
+                        helperGraphics.stroke(255);
+                        helperGraphics.strokeWeight(cfg.stroke);
+                    } else {
+                        helperGraphics.fill(255);
+                        helperGraphics.noStroke();
+                    }
+
+                    drawSeamlessShape(helperGraphics, type, px, py, s, ang, w, h);
+                }
+            }
+            helperGraphics.pop();
+
+            // 3. Apply Threshold
+            let img = helperGraphics.get();
+            img.filter(THRESHOLD, cfg.thresh);
+
+            // 4. Draw to Main Canvas with Tint
+            tint(color(cfg.color));
+            image(img, x, y, w, h);
+            noTint();
+        }
+
+        function drawSeamlessShape(pg, type, x, y, s, angle, boundsW, boundsH) {
+            // Draw 9 times for internal tiling within the zone
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    pg.push();
+                    pg.translate(x + (dx * boundsW), y + (dy * boundsH));
+                    pg.rotate(angle);
+
+                    if (type === 'rect') {
+                        pg.rectMode(CENTER);
+                        pg.rect(0, 0, s, s);
+                    } 
+                    else if (type === 'circle') {
+                        pg.ellipse(0, 0, s, s);
+                    } 
+                    else if (type === 'tri') {
+                        let r = s / 2;
+                        pg.triangle(0, -r, r*0.866, r*0.5, -r*0.866, r*0.5);
+                    }
+                    pg.pop();
+                }
+            }
+        }
+
+        // --- INTERACTION & DATA MANAGEMENT ---
+
+        function handleCanvasClick() {
+            let cellW = width / mCols;
+            let cellH = height / mRows;
+            
+            let col = Math.floor(mouseX / cellW);
+            let row = Math.floor(mouseY / cellH);
+
+            // Bounds check
+            if(col >= 0 && col < mCols && row >= 0 && row < mRows) {
+                let newIndex = row * mCols + col;
+                activeIndex = newIndex;
+                
+                // Update text
+                select('#zone-label').html(`${col}, ${row}`);
+                
+                // Update UI sliders to match data
+                loadUIFromRegion(regions[activeIndex]);
+            }
+        }
+
+        function updateCanvasSize() {
+            let w = parseInt(select('#cvsW').value()) || 800;
+            let h = parseInt(select('#cvsH').value()) || 800;
+            cW = w; cH = h;
+            resizeCanvas(cW, cH);
+        }
+
+        function updateMacroLayout(forceReset = false) {
+            mCols = parseInt(select('#macroCols').value());
+            mRows = parseInt(select('#macroRows').value());
+            
+            let totalRegions = mCols * mRows;
+            
+            // Adjust array size
+            if(forceReset) regions = [];
+            
+            while(regions.length < totalRegions) {
+                // Add new default config clone
+                regions.push({ ...defaultConfig, seed: floor(random(10000)) });
+            }
+            // If we shrank, we just ignore the extra data at the end of the array, or slice it
+            if(regions.length > totalRegions) {
+                regions = regions.slice(0, totalRegions);
+            }
+            
+            // Reset active index if out of bounds
+            if(activeIndex >= regions.length) activeIndex = 0;
+            
+            // Load UI for current
+            loadUIFromRegion(regions[activeIndex]);
+        }
+
+        function triggerRegen() {
+            regions[activeIndex].seed = floor(random(10000));
+        }
+
+        function copySettingsToAll() {
+            let src = regions[activeIndex];
+            for(let i=0; i<regions.length; i++) {
+                if(i === activeIndex) continue;
+                // Shallow copy everything except seed
+                let oldSeed = regions[i].seed;
+                regions[i] = { ...src };
+                regions[i].seed = oldSeed; // Keep random variation
+            }
+        }
+
+        // --- UI BINDING ---
+
+        // Reads data from 'regions[activeIndex]' and sets slider positions
+        function loadUIFromRegion(cfg) {
+            select('#gridCols').value(cfg.gCols);
+            select('#gridRows').value(cfg.gRows);
+            select('#jitterSlider').value(cfg.jitter);
+            select('#minSizeSlider').value(cfg.minS);
+            select('#maxSizeSlider').value(cfg.maxS);
+            select('#chkSquare').checked(cfg.isRect);
+            select('#chkCircle').checked(cfg.isCirc);
+            select('#chkTri').checked(cfg.isTri);
+            select('#rotSlider').value(cfg.rot);
+            select('#hollowSlider').value(cfg.hollow);
+            select('#strokeSlider').value(cfg.stroke);
+            select('#meltSlider').value(cfg.melt);
+            select('#threshSlider').value(cfg.thresh);
+            select('#colorPicker').value(cfg.color);
+        }
+
+        // Attaches listeners to all inputs with class 'zone-input'
+        function bindUI() {
+            let inputs = document.querySelectorAll('.zone-input');
+            inputs.forEach(el => {
+                el.addEventListener('input', () => {
+                    updateRegionFromUI();
+                });
+            });
+        }
+
+        // Reads sliders and updates 'regions[activeIndex]'
+        function updateRegionFromUI() {
+            let cfg = regions[activeIndex];
+            cfg.gCols = parseInt(select('#gridCols').value());
+            cfg.gRows = parseInt(select('#gridRows').value());
+            cfg.jitter = parseInt(select('#jitterSlider').value());
+            cfg.minS = parseInt(select('#minSizeSlider').value());
+            cfg.maxS = parseInt(select('#maxSizeSlider').value());
+            
+            cfg.isRect = select('#chkSquare').checked();
+            cfg.isCirc = select('#chkCircle').checked();
+            cfg.isTri = select('#chkTri').checked();
+
+            cfg.rot = parseFloat(select('#rotSlider').value());
+            cfg.hollow = parseFloat(select('#hollowSlider').value());
+            cfg.stroke = parseInt(select('#strokeSlider').value());
+            cfg.melt = parseInt(select('#meltSlider').value());
+            cfg.thresh = parseFloat(select('#threshSlider').value());
+            cfg.color = select('#colorPicker').value();
+        }
+
+        function saveArt() {
+            saveCanvas('goo_zones_' + mCols + 'x' + mRows, 'png');
+        }
+    </script>
+</body>
+</html>

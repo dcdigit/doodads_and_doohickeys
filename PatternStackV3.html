@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Tiles V3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            color: #ccc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR (Same Styles) --- */
+        #sidebar {
+            width: 320px;
+            background: #111;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            flex-shrink: 0;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        h2 { margin: 0 0 5px 0; color: #fff; font-size: 1.1rem; letter-spacing: 1px; }
+        .subtitle { font-size: 0.8rem; color: #00e5ff; margin-bottom: 10px; font-weight:bold;}
+        
+        .section-title { 
+            font-size: 0.7rem; color: #888; text-transform: uppercase; 
+            margin-top: 15px; border-bottom: 1px solid #333; 
+            padding-bottom: 4px; font-weight: bold;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 5px;}
+        .row-inputs { display: flex; gap: 10px; }
+        .input-wrapper { display: flex; flex-direction: column; flex: 1; }
+        
+        input[type=number] {
+            background: #222; border: 1px solid #444; color: #fff;
+            padding: 6px; border-radius: 4px; width: 100%;
+            box-sizing: border-box; font-family: monospace;
+        }
+        input[type=number]:focus { border-color: #00e5ff; outline: none; }
+
+        label { font-size: 0.75rem; display: flex; justify-content: space-between; color: #aaa; }
+
+        input[type=range] {
+            width: 100%; height: 4px; background: #333;
+            appearance: none; outline: none; opacity: 0.8; border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px;
+            background: #888; cursor: pointer; border-radius: 50%; transition: 0.2s;
+        }
+        input[type=range]:hover::-webkit-slider-thumb { background: #00e5ff; }
+
+        .checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px;}
+        .checkbox-item { display: flex; align-items: center; font-size: 0.8rem; gap: 5px; cursor: pointer; }
+        input[type=checkbox] { accent-color: #00e5ff; }
+
+        button {
+            padding: 10px; background: #222; color: white;
+            border: 1px solid #444; cursor: pointer; font-weight: bold;
+            text-transform: uppercase; font-size: 0.75rem; border-radius: 4px;
+            transition: 0.2s; margin-top: 5px;
+        }
+        button:hover { background: #333; border-color: #666; }
+        button.primary { background: #00e5ff; color: #000; border: none; }
+        button.primary:hover { background: #fff; }
+
+        #active-zone-display {
+            background: #1a1a1a; padding: 10px;
+            border-left: 3px solid #00e5ff; margin-top: 10px;
+            font-size: 0.8rem; color: #fff;
+        }
+
+        /* --- CANVAS AREA --- */
+        #canvas-wrapper {
+            flex-grow: 1; background-color: #080808;
+            background-image: linear-gradient(#151515 1px, transparent 1px), linear-gradient(90deg, #151515 1px, transparent 1px);
+            background-size: 40px 40px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px; overflow: hidden; position: relative;
+        }
+        canvas {
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border: 1px solid #333; cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Goo Engine</h2>
+        <div class="subtitle">WebGL + Shader Architecture</div>
+        
+        <div class="section-title">Canvas Dimensions</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>W</label><input type="number" id="cvsW" value="1000" onchange="resizeApp()"></div>
+            <div class="input-wrapper"><label>H</label><input type="number" id="cvsH" value="1000" onchange="resizeApp()"></div>
+        </div>
+
+        <div class="section-title">Macro Layout</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>Cols</label><input type="number" id="macroCols" value="1" min="1" max="5" onchange="updateMacroLayout()"></div>
+            <div class="input-wrapper"><label>Rows</label><input type="number" id="macroRows" value="2" min="1" max="5" onchange="updateMacroLayout()"></div>
+        </div>
+
+        <div id="active-zone-display">
+            Selected Zone: <span id="zone-label" style="font-weight:bold; color:#00e5ff">0, 0</span>
+        </div>
+        
+        <div class="checkbox-group" style="margin-top:10px; border-bottom: 1px solid #333; padding-bottom:10px;">
+            <label class="checkbox-item"><input type="checkbox" id="autoRegen" checked> Auto-Update</label>
+        </div>
+
+        <button onclick="copySettingsToAll()">Sync Settings to All Zones</button>
+
+        <div class="section-title">Grid & Chaos</div>
+        <div class="row-inputs">
+            <div class="input-wrapper"><label>Cols</label><input type="number" id="gridCols" class="zone-input regen-trigger"></div>
+            <div class="input-wrapper"><label>Rows</label><input type="number" id="gridRows" class="zone-input regen-trigger"></div>
+        </div>
+        <div class="control-group">
+            <label>Jitter Flow</label>
+            <input type="range" id="jitterSlider" class="zone-input" min="0" max="100">
+        </div>
+
+        <div class="section-title">Geometry</div>
+        <div class="control-group">
+            <label>Min Size</label>
+            <input type="range" id="minSizeSlider" class="zone-input regen-trigger" min="5" max="300">
+        </div>
+        <div class="control-group">
+            <label>Max Size</label>
+            <input type="range" id="maxSizeSlider" class="zone-input regen-trigger" min="5" max="300">
+        </div>
+        <div class="checkbox-group">
+            <label class="checkbox-item"><input type="checkbox" id="chkRect" class="zone-input regen-trigger"> Rect</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkCircle" class="zone-input regen-trigger"> Circle</label>
+            <label class="checkbox-item"><input type="checkbox" id="chkTri" class="zone-input regen-trigger"> Tri</label>
+        </div>
+        <div class="control-group" style="margin-top:10px;">
+            <label>Rotation Flow</label>
+            <input type="range" id="rotSlider" class="zone-input" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="section-title">Style</div>
+        <div class="control-group">
+            <label>Hollow %</label>
+            <input type="range" id="hollowSlider" class="zone-input" min="0" max="1" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Outline Thickness</label>
+            <input type="range" id="strokeSlider" class="zone-input" min="1" max="40">
+        </div>
+
+        <div class="section-title">Goo Shader Settings</div>
+        <div class="control-group">
+            <label>Blur Radius</label>
+            <input type="range" id="meltSlider" class="zone-input" min="0" max="100" value="30">
+        </div>
+        <div class="control-group">
+            <label>Threshold (Cutoff)</label>
+            <input type="range" id="threshSlider" class="zone-input" min="0.01" max="0.99" step="0.01">
+        </div>
+        <div class="control-group">
+            <label>Zone Color</label>
+            <input type="color" id="colorPicker" class="zone-input" style="height:30px; width: 100%">
+        </div>
+        
+        <button class="primary" onclick="scrambleSeed()">Scramble Seed</button>
+        <button onclick="saveArt()">Save High-Res</button>
+    </div>
+
+    <div id="canvas-wrapper">
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        /* GLSL SHADER CODE
+           This runs on the Graphics Card. 
+           It performs a Gaussian Blur and Threshold cut in parallel.
+        */
+        const vertShader = `
+            attribute vec3 aPosition;
+            attribute vec2 aTexCoord;
+            varying vec2 vTexCoord;
+            void main() {
+                vTexCoord = aTexCoord;
+                // Scale position to fill screen
+                vec4 positionVec4 = vec4(aPosition, 1.0);
+                positionVec4.xy = positionVec4.xy * 2.0 - 1.0; 
+                gl_Position = positionVec4;
+            }
+        `;
+
+        const fragShader = `
+            precision highp float;
+            varying vec2 vTexCoord;
+            uniform sampler2D uTex;       // The sharp shapes
+            uniform vec2 uResolution;     // Canvas size
+            uniform float uBlur;          // Blur amount
+            uniform float uThresh;        // Threshold
+            uniform vec3 uColor;          // Desired Color
+
+            // Simple Gaussian Blur Approximation
+            vec4 blur(sampler2D image, vec2 uv, vec2 res, float radius) {
+                vec4 color = vec4(0.0);
+                float total = 0.0;
+                
+                // Optimized 9-tap blur loop
+                for (float x = -2.0; x <= 2.0; x++) {
+                    for (float y = -2.0; y <= 2.0; y++) {
+                        // Offset coordinate
+                        vec2 off = vec2(x, y) * radius;
+                        // Gaussian Weight (bell curve)
+                        float weight = exp(-(x*x + y*y) / (2.0 * 2.0)); // Sigma=2.0
+                        
+                        color += texture2D(image, uv + off / res) * weight;
+                        total += weight;
+                    }
+                }
+                return color / total;
+            }
+
+            void main() {
+                // 1. Apply Blur
+                vec4 blurred = blur(uTex, vTexCoord, uResolution, uBlur);
+                
+                // 2. Check Brightness (using Red channel since input is white)
+                float brightness = blurred.r;
+                
+                // 3. Apply Threshold & Color
+                if (brightness > uThresh) {
+                    gl_FragColor = vec4(uColor, 1.0);
+                } else {
+                    // Transparent
+                    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+                }
+            }
+        `;
+
+        // --- P5.JS LOGIC ---
+
+        let gooShader;
+        let sourceBuffer; // The FBO (Frame Buffer Object)
+        let cW = 1000;
+        let cH = 1000;
+        let mCols = 1;
+        let mRows = 2;
+
+        // Data Model
+        let regions = [];
+        let activeIndex = 0;
+
+        const defaultConfig = {
+            gCols: 6, gRows: 6, jitter: 20,
+            minS: 40, maxS: 120,
+            isRect: true, isCirc: true, isTri: false,
+            rot: 0.5,
+            hollow: 0.0, stroke: 10,
+            melt: 20, thresh: 0.5,
+            color: '#00e5ff',
+            seed: 100
+        };
+
+        function preload() {
+            // Nothing to preload, shaders compiled in setup
+        }
+
+        function setup() {
+            // create canvas in WEBGL mode
+            let cnv = createCanvas(cW, cH, WEBGL);
+            cnv.parent('canvas-container');
+            
+            // Disable depth testing for 2D compositing
+            gl = this._renderer.GL;
+            gl.disable(gl.DEPTH_TEST);
+
+            // Compile the Goo Shader
+            gooShader = createShader(vertShader, fragShader);
+
+            // Create the off-screen buffer for drawing sharp shapes
+            // We use standard 2D renderer here for ease of drawing shapes
+            // Then we pass this PGraphics to the WebGL shader
+            sourceBuffer = createGraphics(cW, cH);
+            
+            // Init Data
+            updateMacroLayout(true);
+            bindUI();
+        }
+
+        function draw() {
+            // 1. CLEAR
+            background(20); // Dark background for the window
+            
+            // 2. RESET SOURCE BUFFER
+            // We draw ALL zones into this one buffer first?
+            // Actually, for different colors/thresholds per zone, we must render each zone individually.
+            
+            let cellW = width / mCols;
+            let cellH = height / mRows;
+
+            // Move to top-left for logical thinking (WebGL is center-origin)
+            translate(-width/2, -height/2);
+
+            let idx = 0;
+            for(let r=0; r<mRows; r++){
+                for(let c=0; c<mCols; c++){
+                    let x = c * cellW;
+                    let y = r * cellH;
+                    
+                    // RENDER ZONE
+                    renderZoneWebGL(idx, x, y, cellW, cellH, r, mRows);
+
+                    // UI OVERLAY (Standard P5 drawing on top of WebGL canvas)
+                    if(idx === activeIndex) {
+                        push();
+                        noFill();
+                        stroke('#00e5ff');
+                        strokeWeight(2);
+                        rect(x, y, cellW, cellH);
+                        pop();
+                    }
+                    idx++;
+                }
+            }
+
+            // Mouse Interaction Logic (Manual because WebGL coordinates are weird)
+            if (mouseIsPressed) {
+                checkSelection();
+            }
+        }
+
+        function renderZoneWebGL(idx, x, y, w, h, rowIdx, totalRows) {
+            let cfg = regions[idx];
+            
+            // --- STEP A: DRAW SHARP SHAPES TO BUFFER ---
+            // We resize the source buffer to match the zone size (+ bleed)
+            let bleed = 150; 
+            if(sourceBuffer.width !== w || sourceBuffer.height !== h + bleed) {
+                sourceBuffer.resizeCanvas(w, h + bleed);
+            }
+            
+            sourceBuffer.background(0); // Black background
+            sourceBuffer.fill(255);     // White shapes
+            sourceBuffer.noStroke();
+
+            // --- GRID LOGIC (CPU) ---
+            randomSeed(cfg.seed);
+            
+            let gridRows = cfg.gRows;
+            let rowH = h / gridRows;
+
+            // Stitch Logic
+            let isTopMacro = (rowIdx === 0);
+            let isBottomMacro = (rowIdx === totalRows - 1);
+            let isSingleRow = (totalRows === 1);
+            let startY, endY;
+
+            if (isSingleRow) { startY = rowH/2; endY = h - rowH/2; } 
+            else if (isTopMacro) { startY = rowH/2; endY = h; } 
+            else if (isBottomMacro) { startY = rowH * 1.0; endY = h - rowH/2; } 
+            else { startY = rowH * 1.0; endY = h; }
+
+            // Active Shapes
+            let types = [];
+            if(cfg.isRect) types.push('rect');
+            if(cfg.isCirc) types.push('circle');
+            if(cfg.isTri) types.push('tri');
+            if(types.length === 0) types.push('rect');
+
+            // Draw Loop
+            for (let r = 0; r < gridRows; r++) {
+                let by;
+                if (gridRows > 1) by = map(r, 0, gridRows - 1, startY, endY);
+                else by = h / 2;
+
+                for (let c = 0; c < cfg.gCols; c++) {
+                    let cellW = w / cfg.gCols;
+                    let bx = c * cellW + cellW/2;
+
+                    // Jitter Flow (Noise)
+                    let jitterSalt = cfg.jitter * 0.05 + cfg.seed;
+                    let nX = noise(c * 0.5, r * 0.5, jitterSalt);
+                    let nY = noise(c * 0.5 + 100, r * 0.5 + 100, jitterSalt);
+                    let jX = (nX - 0.5) * 4 * cfg.jitter;
+                    let jY = (nY - 0.5) * 4 * cfg.jitter;
+
+                    let px = bx + jX;
+                    let py = by + jY;
+
+                    let s = random(cfg.minS, cfg.maxS);
+                    let type = random(types);
+                    
+                    // Rect Variance
+                    let finalW = s; let finalH = s;
+                    if(type === 'rect') {
+                        let aspect = random(0.6, 1.6);
+                        finalW = s * aspect; finalH = s / aspect; 
+                    }
+
+                    // Rotation Flow
+                    let rotSalt = cfg.rot * 10 + cfg.seed;
+                    let rotNoise = noise(px * 0.01, py * 0.01, rotSalt);
+                    let ang = (rotNoise * TWO_PI * 2) * cfg.rot;
+
+                    // Hollow
+                    let hollowSalt = (px + py * w + (cfg.hollow * 99999));
+                    let hollowRand = Math.abs(Math.sin(hollowSalt) * 10000) % 1;
+                    let isHollow = hollowRand < cfg.hollow;
+
+                    if(isHollow) {
+                        sourceBuffer.noFill();
+                        sourceBuffer.stroke(255);
+                        sourceBuffer.strokeWeight(cfg.stroke);
+                    } else {
+                        sourceBuffer.fill(255);
+                        sourceBuffer.noStroke();
+                    }
+
+                    drawShapeOnBuffer(sourceBuffer, type, px, py, finalW, finalH, ang, w, h + bleed);
+                }
+            }
+
+            // --- STEP B: RENDER WITH SHADER ---
+            shader(gooShader);
+            
+            // Pass Uniforms
+            gooShader.setUniform('uTex', sourceBuffer);
+            gooShader.setUniform('uResolution', [w, h + bleed]);
+            gooShader.setUniform('uBlur', cfg.melt * 0.1); // Scale melt
+            gooShader.setUniform('uThresh', cfg.thresh);
+            
+            // Convert Hex Color to Vec3 (0-1)
+            let col = color(cfg.color);
+            gooShader.setUniform('uColor', [red(col)/255, green(col)/255, blue(col)/255]);
+
+            // Draw a rectangle on the main canvas with the shader applied
+            // Note: We are already translated to (x, y) relative to top-left
+            // In WebGL drawing a rect happens at the current origin
+            // We need to shift drawing to center of the zone for P5 WebGL rects
+            push();
+            translate(x + w/2, y + (h+bleed)/2 - (bleed/2)); 
+            // Why -bleed/2? because we want the top aligned.
+            // Actually, simpler to just draw the textureQuad at the right spot
+            
+            // We draw a rect that is the size of the zone + bleed
+            rectMode(CENTER);
+            noStroke();
+            rect(0, 0, w, h + bleed); 
+            pop();
+            
+            resetShader();
+        }
+
+        function drawShapeOnBuffer(pg, type, x, y, w, h, angle, boundsW, boundsH) {
+            // Tiling x9 logic for seamless wrapping
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    pg.push();
+                    pg.translate(x + (dx * boundsW), y + (dy * boundsH));
+                    pg.rotate(angle);
+
+                    if (type === 'rect') {
+                        pg.rectMode(CENTER);
+                        pg.rect(0, 0, w, h);
+                    } else if (type === 'circle') {
+                        pg.ellipse(0, 0, w, h);
+                    } else if (type === 'tri') {
+                        let r = w / 2;
+                        pg.triangle(0, -r, r*0.866, r*0.5, -r*0.866, r*0.5);
+                    }
+                    pg.pop();
+                }
+            }
+        }
+
+        // --- INTERACTION & DATA ---
+
+        function resizeApp() {
+            let w = parseInt(select('#cvsW').value()) || 800;
+            let h = parseInt(select('#cvsH').value()) || 800;
+            cW = w; cH = h;
+            resizeCanvas(cW, cH);
+            sourceBuffer = createGraphics(cW, cH);
+        }
+
+        function checkSelection() {
+            // Transform mouse coordinates because WebGL origin is center
+            let mx = mouseX; // + width/2;
+            let my = mouseY; // + height/2;
+            
+            // But wait, we translated -width/2, -height/2 in draw().
+            // So logical coords are actually 0..width
+            
+            let cellW = width / mCols;
+            let cellH = height / mRows;
+            
+            let col = Math.floor(mx / cellW);
+            let row = Math.floor(my / cellH);
+
+            if(col >= 0 && col < mCols && row >= 0 && row < mRows) {
+                let newIndex = row * mCols + col;
+                if(newIndex !== activeIndex) {
+                    activeIndex = newIndex;
+                    select('#zone-label').html(`${col}, ${row}`);
+                    loadUIFromRegion(regions[activeIndex]);
+                }
+            }
+        }
+
+        function updateMacroLayout(forceReset = false) {
+            mCols = parseInt(select('#macroCols').value());
+            mRows = parseInt(select('#macroRows').value());
+            let totalRegions = mCols * mRows;
+            
+            if(forceReset) regions = [];
+            while(regions.length < totalRegions) {
+                regions.push({ ...defaultConfig, seed: floor(random(10000)) });
+            }
+            if(regions.length > totalRegions) regions = regions.slice(0, totalRegions);
+            if(activeIndex >= regions.length) activeIndex = 0;
+            loadUIFromRegion(regions[activeIndex]);
+        }
+
+        function scrambleSeed() {
+            regions[activeIndex].seed = floor(random(10000));
+        }
+
+        function copySettingsToAll() {
+            let src = regions[activeIndex];
+            for(let i=0; i<regions.length; i++) {
+                if(i === activeIndex) continue;
+                let oldSeed = regions[i].seed;
+                regions[i] = { ...src };
+                regions[i].seed = oldSeed; 
+            }
+        }
+
+        function loadUIFromRegion(cfg) {
+            select('#gridCols').value(cfg.gCols);
+            select('#gridRows').value(cfg.gRows);
+            select('#jitterSlider').value(cfg.jitter);
+            select('#minSizeSlider').value(cfg.minS);
+            select('#maxSizeSlider').value(cfg.maxS);
+            select('#chkRect').checked(cfg.isRect);
+            select('#chkCircle').checked(cfg.isCirc);
+            select('#chkTri').checked(cfg.isTri);
+            select('#rotSlider').value(cfg.rot);
+            select('#hollowSlider').value(cfg.hollow);
+            select('#strokeSlider').value(cfg.stroke);
+            select('#meltSlider').value(cfg.melt);
+            select('#threshSlider').value(cfg.thresh);
+            select('#colorPicker').value(cfg.color);
+        }
+
+        function bindUI() {
+            let inputs = document.querySelectorAll('.zone-input');
+            inputs.forEach(el => {
+                el.addEventListener('input', (e) => {
+                    if(select('#autoRegen').checked() && el.classList.contains('regen-trigger')) {
+                       regions[activeIndex].seed = floor(random(10000));
+                    }
+                    updateRegionFromUI();
+                });
+            });
+        }
+
+        function updateRegionFromUI() {
+            let cfg = regions[activeIndex];
+            cfg.gCols = parseInt(select('#gridCols').value());
+            cfg.gRows = parseInt(select('#gridRows').value());
+            cfg.jitter = parseInt(select('#jitterSlider').value());
+            cfg.minS = parseInt(select('#minSizeSlider').value());
+            cfg.maxS = parseInt(select('#maxSizeSlider').value());
+            
+            cfg.isRect = select('#chkRect').checked();
+            cfg.isCirc = select('#chkCircle').checked();
+            cfg.isTri = select('#chkTri').checked();
+
+            cfg.rot = parseFloat(select('#rotSlider').value());
+            cfg.hollow = parseFloat(select('#hollowSlider').value());
+            cfg.stroke = parseInt(select('#strokeSlider').value());
+            cfg.melt = parseInt(select('#meltSlider').value());
+            cfg.thresh = parseFloat(select('#threshSlider').value());
+            cfg.color = select('#colorPicker').value();
+        }
+
+        function saveArt() {
+            saveCanvas('webgl_goo_' + mCols + 'x' + mRows, 'png');
+        }
+    </script>
+</body>
+</html>
