@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Gradient ULTRA</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        canvas { display: block; }
+        .lil-gui { --width: 300px; } /* Make controls wider */
+    </style>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- CONFIGURATION ---
+        const config = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            bgColor: '#111111',
+            colorA: '#ff3366', 
+            colorB: '#0088ff',
+            
+            // Grid
+            gridX: 30,
+            gridY: 30,
+            
+            // Geometry
+            shapeStart: 0, 
+            shapeEnd: 1,   
+            shapeStretchX: 1.0, // New: Stretch width
+            shapeStretchY: 1.0, // New: Stretch height
+            roundness: 0.0,     // New: Rounded corners
+            
+            // Transform
+            baseRotation: 0,
+            randomPos: 0.0,     // New: Jitter position
+            randomRot: 0.0,     // New: Jitter rotation
+            
+            // Gradient Field
+            gradientType: 0, 
+            gradientPower: 1.0,
+            gradientOffset: 0.0, // New: Shift the gradient center
+            invertGradient: false,
+            mirrorGradient: false,
+            
+            // Pulse / Ripple (New Engine)
+            pulseActive: false,
+            pulseSpeed: 1.0,
+            pulseFreq: 5.0,     // How many rings
+            pulseAmp: 0.2,      // Strength of ripple
+            
+            // Sizes
+            minSize: 0.1,
+            maxSize: 0.8,
+            smoothing: 0.02,
+            
+            // Noise / Warp
+            warpStrength: 0.0,
+            noiseScale: 2.0,
+            timeSpeed: 0.2,
+
+            saveImage: () => saveCanvas()
+        };
+
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uTime;
+            uniform float uAspect;
+            uniform vec2 uGrid;
+            
+            uniform vec3 uColorA;
+            uniform vec3 uColorB;
+            uniform vec3 uBgColor;
+            
+            uniform int uShapeStart;
+            uniform int uShapeEnd;
+            uniform vec2 uShapeStretch;
+            uniform float uRoundness;
+            
+            uniform float uBaseRotation;
+            uniform float uRandomPos;
+            uniform float uRandomRot;
+            
+            uniform int uGradientType;
+            uniform float uGradientPower;
+            uniform float uGradientOffset;
+            uniform bool uInvert;
+            uniform bool uMirror;
+            
+            uniform bool uPulseActive;
+            uniform float uPulseSpeed;
+            uniform float uPulseFreq;
+            uniform float uPulseAmp;
+            
+            uniform float uWarp;
+            uniform float uNoiseScale;
+            uniform float uMinSize;
+            uniform float uMaxSize;
+            uniform float uSmoothing;
+
+            varying vec2 vUv;
+
+            // --- UTILS ---
+            float random(vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
+
+            // Simplex Noise
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+            float snoise(vec2 v) {
+                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                vec2 i  = floor(v + dot(v, C.yy) );
+                vec2 x0 = v - i + dot(i, C.xx);
+                vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                vec4 x12 = x0.xyxy + C.xxzz;
+                x12.xy -= i1;
+                i = mod289(i);
+                vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                m = m*m ; m = m*m ;
+                vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                vec3 h = abs(x) - 0.5;
+                vec3 ox = floor(x + 0.5);
+                vec3 a0 = x - ox;
+                m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                vec3 g;
+                g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                return 130.0 * dot(m, g);
+            }
+
+            vec2 rotate(vec2 v, float a) {
+                float s = sin(a); float c = cos(a);
+                mat2 m = mat2(c, -s, s, c);
+                return m * v;
+            }
+
+            // --- SDF SHAPES ---
+            float sdCircle(vec2 p, float r) {
+                // Apply stretch by dividing p
+                return length(p / uShapeStretch) - r;
+            }
+
+            float sdBox(vec2 p, vec2 b, float r) {
+                // b is box size, r is corner radius
+                vec2 d = abs(p) - b + r;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+            }
+
+            // Universal Shape Getter
+            float getShapeDist(int type, vec2 p, float size) {
+                // size is roughly "radius"
+                
+                // Adjust for stretch
+                vec2 pStr = p / uShapeStretch;
+
+                if (type == 0) { // Circle
+                    return length(pStr) - size;
+                } else if (type == 1) { // Square
+                    return sdBox(pStr, vec2(size), uRoundness * size); 
+                } else { // Line / Rect
+                    // Fixed width on one axis, variable on other
+                    return sdBox(pStr, vec2(0.5, size), uRoundness * size);
+                }
+            }
+
+            void main() {
+                // 1. Grid & Warp
+                vec2 st = vUv;
+                
+                // Noise Warp
+                float n = snoise(vec2(st.x, st.y + uTime*0.1) * uNoiseScale);
+                st += vec2(n) * uWarp;
+
+                vec2 gridSt = st * uGrid;
+                vec2 cellId = floor(gridSt);
+                
+                // --- RANDOM JITTER ---
+                // Random offset for position
+                vec2 randOffset = vec2(
+                    random(cellId) - 0.5,
+                    random(cellId + 100.0) - 0.5
+                ) * uRandomPos;
+                
+                vec2 cellUv = fract(gridSt) - 0.5 - randOffset;
+
+                // 2. Influence Calculation
+                vec2 normId = (cellId + 0.5) / uGrid; 
+                float influence = 0.0;
+                
+                // Gradient Logic
+                if (uGradientType == 0) { // Radial
+                    vec2 aspectCorrected = (normId - 0.5);
+                    aspectCorrected.x *= uAspect;
+                    influence = length(aspectCorrected) * 2.0;
+                } else if (uGradientType == 1) { // Linear X
+                    influence = normId.x;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else if (uGradientType == 2) { // Linear Y
+                    influence = normId.y;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else { // Noise
+                     influence = snoise(normId * uNoiseScale + uTime * 0.1) * 0.5 + 0.5;
+                }
+
+                influence += uGradientOffset;
+                if (uInvert) influence = 1.0 - influence;
+                
+                // 3. RIPPLE / PULSE INJECTION
+                if (uPulseActive) {
+                    // Radial distance from center for wave calculation
+                    vec2 centerVec = (normId - 0.5);
+                    centerVec.x *= uAspect;
+                    float dist = length(centerVec);
+                    
+                    // Sine wave: sin(distance * freq - time * speed)
+                    float wave = sin(dist * uPulseFreq - uTime * uPulseSpeed);
+                    
+                    // Add wave to influence
+                    influence += wave * uPulseAmp;
+                }
+
+                // Clamp & Power
+                influence = clamp(influence, 0.0, 1.0);
+                influence = pow(influence, uGradientPower);
+
+                // 4. Geometry Processing
+                float currentSize = mix(uMaxSize, uMinSize, influence);
+                float r = currentSize * 0.5;
+
+                // Rotation: Base + Jitter + Time(optional)
+                float cellRot = uBaseRotation;
+                cellRot += (random(cellId) - 0.5) * uRandomRot * 6.28; // Random rotation
+                
+                vec2 rotatedUv = rotate(cellUv, cellRot);
+
+                // Morphing
+                float d1 = getShapeDist(uShapeStart, rotatedUv, r);
+                float d2 = getShapeDist(uShapeEnd, rotatedUv, r);
+                float dFinal = mix(d1, d2, influence);
+
+                // 5. Coloring
+                float alpha = 1.0 - smoothstep(0.0, uSmoothing, dFinal);
+                
+                // Shift color based on influence?
+                vec3 c = mix(uColorA, uColorB, influence);
+                
+                vec3 finalColor = mix(uBgColor, c, alpha);
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(config.width, config.height);
+        container.appendChild(renderer.domElement);
+
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uTime: { value: 0 },
+                uAspect: { value: config.width / config.height },
+                uGrid: { value: new THREE.Vector2(config.gridX, config.gridY) },
+                uColorA: { value: new THREE.Color(config.colorA) },
+                uColorB: { value: new THREE.Color(config.colorB) },
+                uBgColor: { value: new THREE.Color(config.bgColor) },
+                
+                uShapeStart: { value: config.shapeStart },
+                uShapeEnd: { value: config.shapeEnd },
+                uShapeStretch: { value: new THREE.Vector2(config.shapeStretchX, config.shapeStretchY) },
+                uRoundness: { value: config.roundness },
+                
+                uBaseRotation: { value: config.baseRotation },
+                uRandomPos: { value: config.randomPos },
+                uRandomRot: { value: config.randomRot },
+                
+                uGradientType: { value: config.gradientType },
+                uGradientPower: { value: config.gradientPower },
+                uGradientOffset: { value: config.gradientOffset },
+                uInvert: { value: config.invertGradient },
+                uMirror: { value: config.mirrorGradient },
+                
+                uPulseActive: { value: config.pulseActive },
+                uPulseSpeed: { value: config.pulseSpeed },
+                uPulseFreq: { value: config.pulseFreq },
+                uPulseAmp: { value: config.pulseAmp },
+                
+                uWarp: { value: config.warpStrength },
+                uNoiseScale: { value: config.noiseScale },
+                uMinSize: { value: config.minSize },
+                uMaxSize: { value: config.maxSize },
+                uSmoothing: { value: config.smoothing }
+            }
+        });
+
+        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(quad);
+
+        // --- UPDATES ---
+        function updateUniforms() {
+            const u = material.uniforms;
+            u.uGrid.value.set(config.gridX, config.gridY);
+            u.uColorA.value.set(config.colorA);
+            u.uColorB.value.set(config.colorB);
+            u.uBgColor.value.set(config.bgColor);
+            
+            u.uShapeStart.value = config.shapeStart;
+            u.uShapeEnd.value = config.shapeEnd;
+            u.uShapeStretch.value.set(config.shapeStretchX, config.shapeStretchY);
+            u.uRoundness.value = config.roundness;
+            
+            u.uBaseRotation.value = config.baseRotation;
+            u.uRandomPos.value = config.randomPos;
+            u.uRandomRot.value = config.randomRot;
+            
+            u.uGradientType.value = config.gradientType;
+            u.uGradientPower.value = config.gradientPower;
+            u.uGradientOffset.value = config.gradientOffset;
+            u.uInvert.value = config.invertGradient;
+            u.uMirror.value = config.mirrorGradient;
+            
+            u.uPulseActive.value = config.pulseActive;
+            u.uPulseSpeed.value = config.pulseSpeed;
+            u.uPulseFreq.value = config.pulseFreq;
+            u.uPulseAmp.value = config.pulseAmp;
+            
+            u.uWarp.value = config.warpStrength;
+            u.uNoiseScale.value = config.noiseScale;
+            u.uMinSize.value = config.minSize;
+            u.uMaxSize.value = config.maxSize;
+            u.uSmoothing.value = config.smoothing;
+            u.uAspect.value = config.width / config.height;
+        }
+
+        function resizeCanvas() {
+            renderer.setSize(config.width, config.height);
+            updateUniforms();
+        }
+
+        function saveCanvas() {
+            const link = document.createElement('a');
+            link.download = `ultra-gradient-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- GUI ---
+        const gui = new GUI({ title: 'ULTRA CONTROL', width: 320 });
+        
+        // 1. COLORS
+        const fColor = gui.addFolder('1. Color Palette');
+        fColor.addColor(config, 'colorA').name('Start Color').onChange(updateUniforms);
+        fColor.addColor(config, 'colorB').name('End Color').onChange(updateUniforms);
+        fColor.addColor(config, 'bgColor').name('Background').onChange(updateUniforms);
+
+        // 2. GRID
+        const fGrid = gui.addFolder('2. Grid Topology');
+        fGrid.add(config, 'gridX', 1, 200, 1).name('Columns').onChange(updateUniforms);
+        fGrid.add(config, 'gridY', 1, 200, 1).name('Rows').onChange(updateUniforms);
+        fGrid.add(config, 'warpStrength', 0, 1.0).name('Grid Warp (Melt)').onChange(updateUniforms);
+        fGrid.add(config, 'randomPos', 0, 1.0).name('Position Jitter').onChange(updateUniforms);
+
+        // 3. SHAPE
+        const fShape = gui.addFolder('3. Geometry & Shape');
+        const shapes = { Circle: 0, Square: 1, Line: 2 };
+        fShape.add(config, 'shapeStart', shapes).onChange(updateUniforms);
+        fShape.add(config, 'shapeEnd', shapes).onChange(updateUniforms);
+        fShape.add(config, 'shapeStretchX', 0.1, 4.0).name('Stretch Width').onChange(updateUniforms);
+        fShape.add(config, 'shapeStretchY', 0.1, 4.0).name('Stretch Height').onChange(updateUniforms);
+        fShape.add(config, 'roundness', 0.0, 0.5).name('Corner Roundness').onChange(updateUniforms);
+        fShape.add(config, 'baseRotation', 0, 6.28).name('Global Rotation').onChange(updateUniforms);
+        fShape.add(config, 'randomRot', 0, 1.0).name('Rotation Chaos').onChange(updateUniforms);
+
+        // 4. GRADIENT
+        const fGrad = gui.addFolder('4. Gradient Field');
+        fGrad.add(config, 'gradientType', { Radial: 0, LinearX: 1, LinearY: 2, Noise: 3 }).onChange(updateUniforms);
+        fGrad.add(config, 'gradientPower', 0.1, 5.0).name('Curve (Gamma)').onChange(updateUniforms);
+        fGrad.add(config, 'gradientOffset', -1.0, 1.0).name('Offset Center').onChange(updateUniforms);
+        fGrad.add(config, 'mirrorGradient').name('Mirror Mode').onChange(updateUniforms);
+        fGrad.add(config, 'invertGradient').name('Invert').onChange(updateUniforms);
+        fGrad.add(config, 'minSize', 0, 1.5).onChange(updateUniforms);
+        fGrad.add(config, 'maxSize', 0, 1.5).onChange(updateUniforms);
+        fGrad.add(config, 'smoothing', 0.001, 1.0).name('Glow / Blur').onChange(updateUniforms);
+
+        // 5. RIPPLE & TIME
+        const fPulse = gui.addFolder('5. Pulse & Animation');
+        fPulse.add(config, 'timeSpeed', 0.0, 5.0).name('Global Time Speed');
+        fPulse.add(config, 'pulseActive').name('Enable Ripple').onChange(updateUniforms);
+        fPulse.add(config, 'pulseAmp', 0.0, 1.0).name('Ripple Strength').onChange(updateUniforms);
+        fPulse.add(config, 'pulseFreq', 1.0, 20.0).name('Ripple Frequency').onChange(updateUniforms);
+        fPulse.add(config, 'pulseSpeed', -5.0, 5.0).name('Ripple Speed').onChange(updateUniforms);
+
+        // 6. EXPORT
+        const fExport = gui.addFolder('Export');
+        fExport.add(config, 'width', 100, 4096, 1).onChange(resizeCanvas);
+        fExport.add(config, 'height', 100, 4096, 1).onChange(resizeCanvas);
+        fExport.add(config, 'saveImage').name('Save Image');
+
+        // --- LOOP ---
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            material.uniforms.uTime.value += clock.getDelta() * config.timeSpeed;
+            renderer.render(scene, camera);
+        }
+        updateUniforms();
+        animate();
+    </script>
+</body>
+</html>

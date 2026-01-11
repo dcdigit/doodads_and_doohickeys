@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parametric Gradient Tool v3</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: sans-serif; }
+        #canvas-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            width: 100vw; 
+        }
+        canvas { box-shadow: 0 0 30px rgba(0,0,0,0.6); }
+    </style>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- CONFIGURATION ---
+        const config = {
+            width: 800,
+            height: 800,
+            bgColor: '#111111',
+            shapeColor: '#ffffff',
+            
+            gridX: 20,
+            gridY: 20,
+            
+            shapeStart: 0, 
+            shapeEnd: 1,   
+            rotation: 0,
+            
+            gradientType: 0,
+            mirrorGradient: false,
+            invertGradient: false,
+            gradientPower: 1.0, // New: Controls the curve/strength
+            
+            minSize: 0.1,
+            maxSize: 0.9,
+            smoothing: 0.05,
+            
+            saveImage: () => saveCanvas()
+        };
+
+        // --- GLSL SHADER ---
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uAspect;
+            uniform vec2 uGrid;
+            uniform vec3 uColor;
+            uniform vec3 uBgColor;
+            
+            uniform int uShapeStart;
+            uniform int uShapeEnd;
+            
+            uniform float uRotation;
+            uniform int uGradientType;
+            uniform bool uMirror;
+            uniform bool uInvert;
+            uniform float uGradientPower; // New uniform
+            
+            uniform float uMinSize;
+            uniform float uMaxSize;
+            uniform float uSmoothing;
+
+            varying vec2 vUv;
+
+            // Rotation Matrix
+            vec2 rotate(vec2 v, float a) {
+                float s = sin(a);
+                float c = cos(a);
+                mat2 m = mat2(c, -s, s, c);
+                return m * v;
+            }
+
+            // SDFs
+            float sdCircle(vec2 p, float r) {
+                return length(p) - r;
+            }
+
+            float sdBox(vec2 p, vec2 b) {
+                vec2 d = abs(p) - b;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+            }
+
+            // Shape Helper
+            float getShapeDist(int type, vec2 p, float r) {
+                if (type == 0) return sdCircle(p, r);
+                else if (type == 1) return sdBox(p, vec2(r));
+                else return sdBox(p, vec2(0.5, r));
+            }
+
+            void main() {
+                // 1. Grid Setup
+                vec2 st = vUv;
+                vec2 gridSt = st * uGrid;
+                vec2 cellId = floor(gridSt);
+                vec2 cellUv = fract(gridSt) - 0.5;
+
+                // 2. Base Gradient Calculation
+                vec2 normId = (cellId + 0.5) / uGrid; 
+                float influence = 0.0;
+
+                if (uGradientType == 0) { // Radial
+                    vec2 aspectCorrected = (normId - 0.5);
+                    aspectCorrected.x *= uAspect;
+                    influence = length(aspectCorrected) * 2.0; 
+                } else if (uGradientType == 1) { // Linear X
+                    influence = normId.x;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else { // Linear Y
+                    influence = normId.y;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                }
+
+                if (uInvert) influence = 1.0 - influence;
+                
+                // Clamp before power function to prevent NaN
+                influence = clamp(influence, 0.0, 1.0);
+
+                // 3. Apply Gradient Power (Curve Strength)
+                // This changes the rate of the transition
+                influence = pow(influence, uGradientPower);
+
+                // 4. Size & Morph Calculation
+                float currentSize = mix(uMaxSize, uMinSize, influence);
+                float r = currentSize * 0.5;
+
+                vec2 rotatedUv = rotate(cellUv, uRotation);
+                
+                // Calculate distance for both start and end shapes
+                float distStart = getShapeDist(uShapeStart, rotatedUv, r);
+                float distEnd   = getShapeDist(uShapeEnd, rotatedUv, r);
+                
+                // Morph based on the SAME influenced gradient
+                float distFinal = mix(distStart, distEnd, influence);
+
+                // 5. Render
+                float alpha = 1.0 - smoothstep(0.0, uSmoothing, distFinal);
+                vec3 finalColor = mix(uBgColor, uColor, alpha);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // --- THREE.JS INIT ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(config.width, config.height);
+        container.appendChild(renderer.domElement);
+
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uAspect: { value: 1.0 },
+                uGrid: { value: new THREE.Vector2(config.gridX, config.gridY) },
+                uColor: { value: new THREE.Color(config.shapeColor) },
+                uBgColor: { value: new THREE.Color(config.bgColor) },
+                uShapeStart: { value: config.shapeStart },
+                uShapeEnd: { value: config.shapeEnd },
+                uRotation: { value: config.rotation },
+                uGradientType: { value: config.gradientType },
+                uMirror: { value: config.mirrorGradient },
+                uInvert: { value: config.invertGradient },
+                uGradientPower: { value: config.gradientPower },
+                uMinSize: { value: config.minSize },
+                uMaxSize: { value: config.maxSize },
+                uSmoothing: { value: config.smoothing }
+            }
+        });
+
+        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(quad);
+
+        // --- UPDATE LOGIC ---
+        function updateUniforms() {
+            material.uniforms.uGrid.value.set(config.gridX, config.gridY);
+            material.uniforms.uColor.value.set(config.shapeColor);
+            material.uniforms.uBgColor.value.set(config.bgColor);
+            material.uniforms.uShapeStart.value = config.shapeStart;
+            material.uniforms.uShapeEnd.value = config.shapeEnd;
+            material.uniforms.uRotation.value = config.rotation;
+            material.uniforms.uGradientType.value = config.gradientType;
+            material.uniforms.uMirror.value = config.mirrorGradient;
+            material.uniforms.uInvert.value = config.invertGradient;
+            material.uniforms.uGradientPower.value = config.gradientPower;
+            material.uniforms.uMinSize.value = config.minSize;
+            material.uniforms.uMaxSize.value = config.maxSize;
+            material.uniforms.uSmoothing.value = config.smoothing;
+            material.uniforms.uAspect.value = config.width / config.height;
+        }
+
+        function resizeCanvas() {
+            renderer.setSize(config.width, config.height);
+            updateUniforms();
+        }
+
+        function saveCanvas() {
+            const link = document.createElement('a');
+            link.download = `gradient-tool-v3-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- GUI ---
+        const gui = new GUI({ title: 'Gradient Tool v3' });
+        
+        const f1 = gui.addFolder('Canvas');
+        f1.add(config, 'width', 100, 4096, 1).onChange(resizeCanvas);
+        f1.add(config, 'height', 100, 4096, 1).onChange(resizeCanvas);
+        f1.addColor(config, 'bgColor').onChange(updateUniforms);
+        f1.addColor(config, 'shapeColor').onChange(updateUniforms);
+
+        const f2 = gui.addFolder('Grid');
+        f2.add(config, 'gridX', 1, 200, 1).name('Cols').onChange(updateUniforms);
+        f2.add(config, 'gridY', 1, 200, 1).name('Rows').onChange(updateUniforms);
+
+        const f3 = gui.addFolder('Morph & Shapes');
+        const shapes = { Circle: 0, Square: 1, Line: 2 };
+        f3.add(config, 'shapeStart', shapes).name('Start Shape').onChange(updateUniforms);
+        f3.add(config, 'shapeEnd', shapes).name('End Shape').onChange(updateUniforms);
+        f3.add(config, 'rotation', 0, Math.PI * 2).name('Rotation').onChange(updateUniforms);
+        f3.add(config, 'smoothing', 0.001, 0.5).name('Softness').onChange(updateUniforms);
+
+        const f4 = gui.addFolder('Gradient Field');
+        f4.add(config, 'gradientType', { Radial: 0, LinearX: 1, LinearY: 2 }).onChange(updateUniforms);
+        f4.add(config, 'gradientPower', 0.1, 5.0).name('Curve Strength').onChange(updateUniforms); // NEW CONTROL
+        f4.add(config, 'mirrorGradient').name('Mirror from Center').onChange(updateUniforms);
+        f4.add(config, 'invertGradient').name('Invert Flow').onChange(updateUniforms);
+        f4.add(config, 'minSize', 0, 1.5).name('Min Size').onChange(updateUniforms);
+        f4.add(config, 'maxSize', 0, 1.5).name('Max Size').onChange(updateUniforms);
+
+        gui.add(config, 'saveImage').name('Download .PNG');
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        updateUniforms();
+        animate();
+    </script>
+</body>
+</html>
