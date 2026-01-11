@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3js Advanced Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #111;
+        }
+    </style>
+</head>
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.skypack.dev/three@0.132.2/build/three.module.js",
+                "three/addons/": "https://cdn.skypack.dev/three@0.132.2/examples/jsm/",
+                "lil-gui": "https://cdn.skypack.dev/lil-gui@0.19.1"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GUI } from 'lil-gui';
+
+        // ---------------------------------
+        // 1. Scene and Core Setup
+        // ---------------------------------
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(6, 6, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // ---------------------------------
+        // 2. Controls & Lights
+        // ---------------------------------
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(10, 15, 10);
+        scene.add(pointLight);
+
+        // ---------------------------------
+        // 3. GUI Control Panel
+        // ---------------------------------
+        
+        // This object holds all the parameters we want to control
+        const params = {
+            lineCount: 20,
+            bulgeAmount: 1.5, // This controls the "football" shape and line curvature
+            shapeHeight: 8,
+            baseRadius: 3,
+            lineThickness: 0.1,
+            shellColor: '#0077ff',
+            lineColor: '#ffffff',
+            shellOpacity: 0.3,
+            autoRotate: true
+        };
+
+        const gui = new GUI();
+        gui.add(params, 'lineCount', 5, 50, 1).name('Line Count').onChange(regenerate);
+        gui.add(params, 'bulgeAmount', -2, 4, 0.1).name('Curvature (Bulge)').onChange(regenerate);
+        gui.add(params, 'shapeHeight', 2, 15, 0.5).name('Height').onChange(regenerate);
+        gui.add(params, 'baseRadius', 1, 5, 0.1).name('Base Radius').onChange(regenerate);
+        gui.add(params, 'lineThickness', 0.01, 0.5, 0.01).name('Line Thickness').onChange(regenerate);
+        gui.add(params, 'shellOpacity', 0.1, 1, 0.05).name('Shell Opacity').onChange(regenerate);
+        gui.addColor(params, 'shellColor').name('Shell Color').onChange(regenerate);
+        gui.addColor(params, 'lineColor').name('Line Color').onChange(regenerate);
+        gui.add(params, 'autoRotate').name('Auto-Rotate');
+
+        // ---------------------------------
+        // 4. Geometry Generation
+        // ---------------------------------
+
+        // Create a single group to hold all parts
+        let mainGroup = new THREE.Group();
+        scene.add(mainGroup);
+
+        // Materials that will be updated
+        let shellMaterial = new THREE.MeshStandardMaterial();
+        let lineMaterial = new THREE.MeshStandardMaterial();
+
+        // This function builds the entire shape
+        function regenerate() {
+            // Clear all old objects from the group
+            mainGroup.clear();
+
+            // --- Update Materials ---
+            shellMaterial.color.set(params.shellColor);
+            shellMaterial.opacity = params.shellOpacity;
+            shellMaterial.transparent = true;
+            shellMaterial.side = THREE.DoubleSide; // Render as a shell
+            shellMaterial.roughness = 0.3;
+
+            lineMaterial.color.set(params.lineColor);
+            lineMaterial.roughness = 0.5;
+
+            // --- Define the Curve for the Shape ---
+            // This 2D curve will be 'lathed' (revolved) around the Y-axis.
+            // It's a spline curve defined by 3 points: bottom, middle (bulge), top.
+            const halfHeight = params.shapeHeight / 2;
+            const curvePoints = [
+                new THREE.Vector2(params.baseRadius, -halfHeight),
+                new THREE.Vector2(params.baseRadius + params.bulgeAmount, 0),
+                new THREE.Vector2(params.baseRadius, halfHeight)
+            ];
+            const spline = new THREE.SplineCurve(curvePoints);
+            const lathePoints = spline.getPoints(32); // 32 segments for a smooth shell
+
+            // --- 1. Create the Shell ---
+            const shellGeom = new THREE.LatheGeometry(lathePoints, 32);
+            const shellMesh = new THREE.Mesh(shellGeom, shellMaterial);
+            mainGroup.add(shellMesh);
+
+            // --- 2. Create the 3D Lines ---
+            
+            // First, create a 3D path template from the same curve
+            const path3D = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(params.baseRadius, -halfHeight, 0),
+                new THREE.Vector3(params.baseRadius + params.bulgeAmount, 0, 0),
+                new THREE.Vector3(params.baseRadius, halfHeight, 0)
+            ]);
+            
+            // Loop to create each line
+            for (let i = 0; i < params.lineCount; i++) {
+                // Clone the path template
+                const linePath = path3D.clone();
+
+                // Calculate the angle to rotate this line
+                const angle = (i / params.lineCount) * Math.PI * 2;
+                
+                // Create a rotation matrix
+                const rotation = new THREE.Matrix4().makeRotationY(angle);
+
+                // Apply the rotation to every point in the cloned path
+                linePath.points.forEach(p => p.applyMatrix4(rotation));
+
+                // Create the square tube
+                // TubeGeometry(path, segments, radius, radialSegments, closed)
+                const tubeGeom = new THREE.TubeGeometry(
+                    linePath,           // The curved 3D path
+                    20,                 // Segments along the path's length
+                    params.lineThickness, // The "radius" or thickness of the tube
+                    4,                  // 4 radial segments = a square extrusion
+                    false               // Not closed
+                );
+
+                const lineMesh = new THREE.Mesh(tubeGeom, lineMaterial);
+                mainGroup.add(lineMesh);
+            }
+        }
+
+        // ---------------------------------
+        // 5. Animation Loop
+        // ---------------------------------
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+
+            if (params.autoRotate) {
+                mainGroup.rotation.y += 0.005;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // ---------------------------------
+        // 6. Resize Handler
+        // ---------------------------------
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initial build
+        regenerate();
+        // Start loop
+        animate();
+
+    </script>
+</body>
+</html>
