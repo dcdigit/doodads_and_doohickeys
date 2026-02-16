@@ -3,282 +3,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Files Index</title>
+    <title>Sylvan Cummings — Generative Art & Creative Tools</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
         :root {
-            --primary-color: #4a6fa5;
-            --secondary-color: #334e68;
-            --accent-color: #829ab1;
-            --background-color: #f7f9fc;
-            --text-color: #334e68;
-            --light-gray: #e6e9ef;
-            --white: #ffffff;
+            --bg: #0a0a0a;
+            --card-bg: #141414;
+            --card-border: #222;
+            --text: #e5e5e5;
+            --text-secondary: #888;
+            --accent-purple: #7c3aed;
+            --accent-cyan: #06b6d4;
+            --glow: rgba(124, 58, 237, 0.15);
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            padding: 0;
-            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        header {
-            background-color: var(--white);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0533 25%, #0c2340 50%, #0a2a2a 75%, #0a0a0a 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
             text-align: center;
+            padding: 2rem;
         }
-        
-        h1 {
-            color: var(--primary-color);
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
         }
-        
-        h2 {
-            color: var(--secondary-color);
-            margin: 1.5rem 0 1rem;
-            font-size: 1.8rem;
+
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 500px;
         }
-        
-        .container {
-            max-width: 1200px;
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2.5rem;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            animation: bobble 2s ease-in-out infinite;
+        }
+
+        .scroll-indicator .arrow {
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid var(--text-secondary);
+            border-bottom: 2px solid var(--text-secondary);
+            transform: rotate(45deg);
+        }
+
+        @keyframes bobble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+
+        /* ── Filter Bar ── */
+        .filter-bar {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 2rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.45rem 1rem;
+            border-radius: 100px;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #444;
+            color: var(--text);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            border-color: transparent;
+            color: #fff;
+        }
+
+        /* ── Grid ── */
+        .grid-section {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
-        
-        .description {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background-color: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+        .masonry {
+            columns: 3;
+            column-gap: 1.5rem;
         }
-        
-        .file-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
+
+        /* ── Card ── */
+        .card {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.5s ease, translate 0.5s ease;
+            opacity: 0;
+            translate: 0 30px;
         }
-        
-        .file-card {
-            background-color: var(--white);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        .card.visible {
+            opacity: 1;
+            translate: 0 0;
         }
-        
-        .file-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+
+        .card.hidden {
+            display: none;
         }
-        
-        .file-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+
+        .card:hover {
+            border-color: #333;
+            box-shadow: 0 0 30px var(--glow);
+            transform: translateY(-2px);
         }
-        
-        .file-card p {
-            color: var(--text-color);
-            margin-bottom: 1rem;
+
+        .card-preview {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: #0d0d0d;
+            position: relative;
+            overflow: hidden;
         }
-        
-        .file-link {
+
+        .card-preview iframe {
+            width: 200%;
+            height: 200%;
+            border: none;
+            transform: scale(0.5);
+            transform-origin: top left;
+            pointer-events: none;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .card-category {
             display: inline-block;
-            background-color: var(--primary-color);
-            color: var(--white);
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.3s ease;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+            margin-bottom: 0.6rem;
         }
-        
-        .file-link:hover {
-            background-color: var(--secondary-color);
+
+        .cat-generative { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .cat-gradient { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
+        .cat-morph { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+        .cat-tools { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
         }
-        
-        .file-meta {
-            font-size: 0.85rem;
-            color: var(--accent-color);
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
             margin-bottom: 1rem;
-            display: block;
+            line-height: 1.5;
         }
-        
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .card-link:hover { color: #67e8f9; }
+
+        .card-link .arrow-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .card-link:hover .arrow-icon { transform: translateX(3px); }
+
+        /* ── Footer ── */
         footer {
             text-align: center;
-            padding: 2rem;
-            background-color: var(--white);
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
             margin-top: 2rem;
-            color: var(--accent-color);
         }
-        
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            
-            h2 {
-                font-size: 1.5rem;
-            }
-            
-            .container {
-                padding: 1rem;
-            }
-            
-            .file-list {
-                grid-template-columns: 1fr;
-            }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .masonry { columns: 2; }
+        }
+
+        @media (max-width: 640px) {
+            .masonry { columns: 1; }
+            .grid-section { padding: 1rem; }
+            .filter-bar { padding: 1.5rem 1rem 0; }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>HTML Files Index</h1>
-        <p>A collection of HTML documents</p>
-    </header>
-    
-    <div class="container">
-        <section class="description">
-            <h2>About This Collection</h2>
-            <p>Welcome to the HTML Files Index! This is a collection of HTML documents available in this directory. Browse through the available files below.</p>
-        </section>
-        
-        <h2>HTML Files</h2>
-        <div class="file-list">
-            <div class="file-card">
-                <h3>📄 ClaudeMorph.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 19.58 KB • Modified: May 13, 2025, 10:46 PM</span>
-                <a href="ClaudeMorph.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 color-guessing-game.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 3.79 KB • Modified: Sep 12, 2024, 05:00 PM</span>
-                <a href="color-guessing-game.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GeminiMorph.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 21.91 KB • Modified: May 13, 2025, 11:16 PM</span>
-                <a href="GeminiMorph.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientShapes.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 10.81 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="GradientShapes.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientShapesV2.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 10.39 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="GradientShapesV2.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientUltra.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 17.98 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="GradientUltra.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientX.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 22.58 KB • Modified: Jan 13, 2026, 01:17 AM</span>
-                <a href="GradientX.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 Hexagons.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 11.34 KB • Modified: Mar 22, 2025, 12:34 PM</span>
-                <a href="Hexagons.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 idkyet.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 15.44 KB • Modified: Jan 13, 2026, 01:26 AM</span>
-                <a href="idkyet.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 index.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 10.18 KB • Modified: Jan 13, 2026, 01:26 AM</span>
-                <a href="index.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 interactive-display.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 14.46 KB • Modified: Mar 21, 2025, 01:00 PM</span>
-                <a href="interactive-display.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 LiquidTiles.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 13.39 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="LiquidTiles.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 Morph.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 15.26 KB • Modified: May 13, 2025, 10:30 PM</span>
-                <a href="Morph.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 PatternStack.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 19.25 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="PatternStack.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 PatternStackV2.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 21.69 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="PatternStackV2.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 PetriDish.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 14.93 KB • Modified: Jan 13, 2026, 01:38 AM</span>
-                <a href="PetriDish.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 Prisms.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 10.91 KB • Modified: May 13, 2025, 09:57 PM</span>
-                <a href="Prisms.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 projecttool.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 33.63 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="projecttool.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 VaseGenerator.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 7.63 KB • Modified: Jan 11, 2026, 01:59 PM</span>
-                <a href="VaseGenerator.html" class="file-link">View File</a>
-            </div>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-gradient"></div>
+        <div class="hero-content">
+            <h1>Sylvan Cummings</h1>
+            <p>Generative art & creative tools — made with AI</p>
         </div>
+        <a href="#projects" class="scroll-indicator">
+            <span>Explore</span>
+            <div class="arrow"></div>
+        </a>
+    </section>
+
+    <!-- Filter Bar -->
+    <div id="projects" class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="generative">Generative Art</button>
+        <button class="filter-btn" data-filter="gradient">Gradient Machines</button>
+        <button class="filter-btn" data-filter="morph">Morphing Prisms</button>
+        <button class="filter-btn" data-filter="tools">Creative Tools</button>
     </div>
-    
+
+    <!-- Project Grid -->
+    <section class="grid-section">
+        <div class="masonry">
+
+            <!-- Generative Art -->
+            <div class="card" data-category="generative">
+                <div class="card-preview">
+                    <iframe src="PetriDish.html" loading="lazy" sandbox="allow-scripts" title="Petri Dish preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-generative">Generative Art</span>
+                    <h3 class="card-title">Petri Dish</h3>
+                    <p class="card-desc">A living simulation of cellular colonies growing, competing, and evolving in real time across a digital petri dish.</p>
+                    <a href="PetriDish.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="generative">
+                <div class="card-preview">
+                    <iframe src="smoke.html" loading="lazy" sandbox="allow-scripts" title="Strange Attractors preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-generative">Generative Art</span>
+                    <h3 class="card-title">Strange Attractors</h3>
+                    <p class="card-desc">Wispy tendrils of smoke swirl and dance through chaotic attractor fields, leaving luminous trails in their wake.</p>
+                    <a href="smoke.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="generative">
+                <div class="card-preview">
+                    <iframe src="Trail.html" loading="lazy" sandbox="allow-scripts" title="Trail preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-generative">Generative Art</span>
+                    <h3 class="card-title">Trail</h3>
+                    <p class="card-desc">Flowing particle trails weave across the canvas, forming organic patterns that shift and merge endlessly.</p>
+                    <a href="Trail.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="generative">
+                <div class="card-preview">
+                    <iframe src="interactive-display.html" loading="lazy" sandbox="allow-scripts" title="Particle Universe preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-generative">Generative Art</span>
+                    <h3 class="card-title">Particle Universe</h3>
+                    <p class="card-desc">An interactive particle system where thousands of points attract, repel, and orbit each other in a miniature cosmos.</p>
+                    <a href="interactive-display.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <!-- Gradient Machines -->
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="GradientX.html" loading="lazy" sandbox="allow-scripts" title="Gradient X preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">Gradient X</h3>
+                    <p class="card-desc">The flagship gradient engine — multi-layered color fields with real-time controls for blend mode, speed, and complexity.</p>
+                    <a href="GradientX.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="GradientUltra.html" loading="lazy" sandbox="allow-scripts" title="Gradient Ultra preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">Gradient Ultra</h3>
+                    <p class="card-desc">High-fidelity gradient compositions with smooth transitions and rich color depth that shift over time.</p>
+                    <a href="GradientUltra.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="GradientShapes.html" loading="lazy" sandbox="allow-scripts" title="Gradient Shapes preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">Gradient Shapes</h3>
+                    <p class="card-desc">Geometric forms filled with flowing gradients that morph and overlap, creating stained-glass-like compositions.</p>
+                    <a href="GradientShapes.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="GradientShapesV2.html" loading="lazy" sandbox="allow-scripts" title="Gradient Shapes V2 preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">Gradient Shapes V2</h3>
+                    <p class="card-desc">An evolved take on gradient shapes with smoother animations, richer palettes, and more complex geometry.</p>
+                    <a href="GradientShapesV2.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="GradientRandomizer.html" loading="lazy" sandbox="allow-scripts" title="Gradient Randomizer preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">Gradient Randomizer</h3>
+                    <p class="card-desc">A randomized gradient generator that produces unique color combinations and compositions on every refresh.</p>
+                    <a href="GradientRandomizer.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="gradientwtiling.html" loading="lazy" sandbox="allow-scripts" title="Gradient Tiling preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">Gradient Tiling</h3>
+                    <p class="card-desc">Seamless gradient tiles that tessellate across the viewport, creating infinite wallpaper-like patterns.</p>
+                    <a href="gradientwtiling.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="gradient">
+                <div class="card-preview">
+                    <iframe src="3dgradient.html" loading="lazy" sandbox="allow-scripts" title="3D Gradient preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-gradient">Gradient Machines</span>
+                    <h3 class="card-title">3D Gradient</h3>
+                    <p class="card-desc">Gradients projected onto 3D surfaces that rotate and deform, adding dimensionality to color fields.</p>
+                    <a href="3dgradient.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <!-- Morphing Prisms -->
+            <div class="card" data-category="morph">
+                <div class="card-preview">
+                    <iframe src="ClaudeMorph.html" loading="lazy" sandbox="allow-scripts" title="Claude Morph preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-morph">Morphing Prisms</span>
+                    <h3 class="card-title">Claude Morph</h3>
+                    <p class="card-desc">Fluid shape-shifting geometry generated by Claude — smooth morphing between organic and crystalline forms.</p>
+                    <a href="ClaudeMorph.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="morph">
+                <div class="card-preview">
+                    <iframe src="GeminiMorph.html" loading="lazy" sandbox="allow-scripts" title="Gemini Morph preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-morph">Morphing Prisms</span>
+                    <h3 class="card-title">Gemini Morph</h3>
+                    <p class="card-desc">Gemini's take on morphing visuals — dual-form geometry that splits, merges, and refracts light.</p>
+                    <a href="GeminiMorph.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="morph">
+                <div class="card-preview">
+                    <iframe src="Morph.html" loading="lazy" sandbox="allow-scripts" title="Morph preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-morph">Morphing Prisms</span>
+                    <h3 class="card-title">Morph</h3>
+                    <p class="card-desc">The original morph experiment — shapes dissolve and reform in an endless cycle of transformation.</p>
+                    <a href="Morph.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="morph">
+                <div class="card-preview">
+                    <iframe src="Prisms.html" loading="lazy" sandbox="allow-scripts" title="Prisms preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-morph">Morphing Prisms</span>
+                    <h3 class="card-title">Prisms</h3>
+                    <p class="card-desc">Light refracts through rotating prismatic shapes, casting rainbow caustics across a dark canvas.</p>
+                    <a href="Prisms.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="morph">
+                <div class="card-preview">
+                    <iframe src="Hexagons.html" loading="lazy" sandbox="allow-scripts" title="Hexagons preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-morph">Morphing Prisms</span>
+                    <h3 class="card-title">Hexagons</h3>
+                    <p class="card-desc">A tessellated hexagonal grid that pulses with color — cells ripple outward from interaction points.</p>
+                    <a href="Hexagons.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <!-- Creative Tools -->
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="LiquidTiles.html" loading="lazy" sandbox="allow-scripts" title="Liquid Tiles preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">Liquid Tiles</h3>
+                    <p class="card-desc">A tiling system where each tile behaves like liquid — drag to pour color and watch it flow between cells.</p>
+                    <a href="LiquidTiles.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="PatternStack.html" loading="lazy" sandbox="allow-scripts" title="Pattern Stack preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">Pattern Stack</h3>
+                    <p class="card-desc">Layer multiple pattern generators on top of each other with blend modes to create complex visual textures.</p>
+                    <a href="PatternStack.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="PatternStackV2.html" loading="lazy" sandbox="allow-scripts" title="Pattern Stack V2 preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">Pattern Stack V2</h3>
+                    <p class="card-desc">The next generation of Pattern Stack with more layer types, better controls, and export capabilities.</p>
+                    <a href="PatternStackV2.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="idkyet.html" loading="lazy" sandbox="allow-scripts" title="StencilForge preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">StencilForge</h3>
+                    <p class="card-desc">A stencil-based drawing tool for creating layered cut-out art with precision shapes and masking.</p>
+                    <a href="idkyet.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="VaseGenerator.html" loading="lazy" sandbox="allow-scripts" title="Vase Generator preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">Vase Generator</h3>
+                    <p class="card-desc">Procedurally generate elegant vase silhouettes by tweaking curves, symmetry, and profile parameters.</p>
+                    <a href="VaseGenerator.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="color-guessing-game.html" loading="lazy" sandbox="allow-scripts" title="Color Guessing Game preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">Color Guessing Game</h3>
+                    <p class="card-desc">Test your color perception — guess the hex code of a randomly generated color and see how close you get.</p>
+                    <a href="color-guessing-game.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+            <div class="card" data-category="tools">
+                <div class="card-preview">
+                    <iframe src="projecttool.html" loading="lazy" sandbox="allow-scripts" title="Project Tool preview"></iframe>
+                </div>
+                <div class="card-body">
+                    <span class="card-category cat-tools">Creative Tools</span>
+                    <h3 class="card-title">Project Tool</h3>
+                    <p class="card-desc">A lightweight project planning canvas for sketching out ideas, timelines, and creative workflows.</p>
+                    <a href="projecttool.html" class="card-link">Open <span class="arrow-icon">&rarr;</span></a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
     <footer>
-        <p>&copy; 2026 HTML Files Index</p>
+        <p>&copy; 2026 Sylvan Cummings</p>
     </footer>
+
+    <script>
+        // ── Scroll-triggered card reveal ──
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.card').forEach((card, i) => {
+            card.style.transitionDelay = `${(i % 6) * 60}ms`;
+            observer.observe(card);
+        });
+
+        // ── Category filter ──
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const cards = document.querySelectorAll('.card');
+
+        filterBtns.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const filter = btn.dataset.filter;
+
+                cards.forEach((card) => {
+                    if (filter === 'all' || card.dataset.category === filter) {
+                        card.classList.remove('hidden');
+                        // Re-trigger visibility for newly shown cards
+                        requestAnimationFrame(() => {
+                            if (!card.classList.contains('visible')) {
+                                observer.observe(card);
+                            }
+                        });
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
