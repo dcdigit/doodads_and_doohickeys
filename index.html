@@ -41,33 +41,13 @@
             overflow: hidden;
         }
 
-        .hero-gradient {
+        .hero-video {
             position: absolute;
             inset: -20%;
             width: 140%;
             height: 140%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a0533 25%, #0c2340 50%, #0a2a2a 75%, #0a0a0a 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 12s ease infinite;
+            object-fit: cover;
             will-change: transform;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Blur layer that sits between gradient and text */
-        .hero-blur {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            mask-image: radial-gradient(ellipse 50% 40% at 50% 50%, black 0%, transparent 100%);
-            -webkit-mask-image: radial-gradient(ellipse 50% 40% at 50% 50%, black 0%, transparent 100%);
-            pointer-events: none;
         }
 
         .hero-content {
@@ -83,11 +63,7 @@
             font-weight: 900;
             letter-spacing: -0.03em;
             color: transparent;
-            -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.6);
-            text-shadow:
-                0 0 20px rgba(124, 58, 237, 0.3),
-                0 0 60px rgba(6, 182, 212, 0.15),
-                0 0 100px rgba(124, 58, 237, 0.08);
+            -webkit-text-stroke: 2px rgba(255, 255, 255, 0.7);
             margin-bottom: 1rem;
             position: relative;
         }
@@ -296,8 +272,9 @@
 
     <!-- Hero -->
     <section class="hero">
-        <div class="hero-gradient"></div>
-        <div class="hero-blur"></div>
+        <video class="hero-video" autoplay muted playsinline id="hero-video">
+            <source src="hero-bg.mp4" type="video/mp4">
+        </video>
         <div class="hero-content">
             <h1>Sylvan Cummings</h1>
             <p>Generative art &amp; creative tools</p>
@@ -617,19 +594,45 @@
 
     <script>
         // ── Parallax hero ──
-        const heroGradient = document.querySelector('.hero-gradient');
+        const heroVideo = document.getElementById('hero-video');
         const heroContent = document.querySelector('.hero-content');
         const hero = document.querySelector('.hero');
 
         window.addEventListener('scroll', () => {
             const scrollY = window.scrollY;
             const heroH = hero.offsetHeight;
-            if (scrollY > heroH) return; // skip when past hero
-            // Background moves faster (1.6x), content moves slower (0.4x)
-            heroGradient.style.transform = `translateY(${scrollY * 0.6}px)`;
+            if (scrollY > heroH) return;
+            heroVideo.style.transform = `translateY(${scrollY * 0.6}px)`;
             heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
             heroContent.style.opacity = 1 - (scrollY / heroH) * 1.5;
         }, { passive: true });
+
+        // ── Ping-pong video playback (play forward, then reverse, repeat) ──
+        (() => {
+            let direction = 1; // 1 = forward, -1 = reverse
+
+            heroVideo.addEventListener('ended', () => {
+                // When forward play ends, start reversing
+                direction = -1;
+                reversePlay();
+            });
+
+            function reversePlay() {
+                const step = () => {
+                    if (direction !== -1) return;
+                    heroVideo.currentTime = Math.max(0, heroVideo.currentTime - 0.04);
+                    if (heroVideo.currentTime <= 0.05) {
+                        // Reached the start, play forward again
+                        direction = 1;
+                        heroVideo.play();
+                        return;
+                    }
+                    requestAnimationFrame(step);
+                };
+                heroVideo.pause();
+                requestAnimationFrame(step);
+            }
+        })();
 
         // ── Scroll-triggered card reveal ──
         const observer = new IntersectionObserver((entries) => {
