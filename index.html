@@ -24,7 +24,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
+            background: transparent;
             color: var(--text);
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
@@ -41,13 +41,15 @@
             overflow: hidden;
         }
 
-        .hero-video {
-            position: absolute;
-            inset: -20%;
-            width: 140%;
-            height: 140%;
-            object-fit: cover;
-            will-change: transform;
+        /* ── Live gradient background ── */
+        #live-bg {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            border: none;
+            pointer-events: none;
         }
 
         .hero-content {
@@ -119,8 +121,10 @@
         .filter-btn {
             padding: 0.45rem 1rem;
             border-radius: 100px;
-            border: 1px solid var(--card-border);
-            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             color: var(--text-secondary);
             font-family: inherit;
             font-size: 0.85rem;
@@ -156,8 +160,10 @@
         .card {
             break-inside: avoid;
             margin-bottom: 1.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
+            background: rgba(10, 10, 10, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             overflow: hidden;
             transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.5s ease, translate 0.5s ease;
@@ -175,15 +181,16 @@
         }
 
         .card:hover {
-            border-color: #333;
+            border-color: rgba(255, 255, 255, 0.15);
             box-shadow: 0 0 30px var(--glow);
+            background: rgba(10, 10, 10, 0.7);
             transform: translateY(-2px);
         }
 
         .card-preview {
             width: 100%;
             aspect-ratio: 4 / 3;
-            background: #0d0d0d;
+            background: rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
         }
@@ -255,7 +262,7 @@
             padding: 3rem 2rem;
             color: var(--text-secondary);
             font-size: 0.85rem;
-            border-top: 1px solid var(--card-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
             margin-top: 2rem;
         }
 
@@ -273,11 +280,11 @@
 </head>
 <body class="">
 
+    <!-- Live gradient background -->
+    <iframe id="live-bg" src="GradientUltra.html" loading="eager" sandbox="allow-scripts allow-same-origin" title="Background gradient"></iframe>
+
     <!-- Hero -->
     <section class="hero">
-        <video class="hero-video" autoplay muted playsinline id="hero-video">
-            <source src="hero-bg.mp4" type="video/mp4">
-        </video>
         <div class="hero-content">
             <h1>Sylvan<br>Cummings</h1>
             <p>Generative art &amp; creative tools</p>
@@ -596,8 +603,17 @@
     
 
     <script>
-        // ── Parallax hero ──
-        const heroVideo = document.getElementById('hero-video');
+        // ── Hide GUI controls in background iframe ──
+        const liveBg = document.getElementById('live-bg');
+        liveBg.addEventListener('load', () => {
+            try {
+                const style = liveBg.contentDocument.createElement('style');
+                style.textContent = '.lil-gui { display: none !important; }';
+                liveBg.contentDocument.head.appendChild(style);
+            } catch (e) { /* cross-origin fallback: no-op */ }
+        });
+
+        // ── Parallax hero text ──
         const heroContent = document.querySelector('.hero-content');
         const hero = document.querySelector('.hero');
 
@@ -605,37 +621,9 @@
             const scrollY = window.scrollY;
             const heroH = hero.offsetHeight;
             if (scrollY > heroH) return;
-            heroVideo.style.transform = `translateY(${scrollY * 0.6}px)`;
             heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
             heroContent.style.opacity = 1 - (scrollY / heroH) * 1.5;
         }, { passive: true });
-
-        // ── Ping-pong video playback (play forward, then reverse, repeat) ──
-        (() => {
-            let direction = 1; // 1 = forward, -1 = reverse
-
-            heroVideo.addEventListener('ended', () => {
-                // When forward play ends, start reversing
-                direction = -1;
-                reversePlay();
-            });
-
-            function reversePlay() {
-                const step = () => {
-                    if (direction !== -1) return;
-                    heroVideo.currentTime = Math.max(0, heroVideo.currentTime - 0.04);
-                    if (heroVideo.currentTime <= 0.05) {
-                        // Reached the start, play forward again
-                        direction = 1;
-                        heroVideo.play();
-                        return;
-                    }
-                    requestAnimationFrame(step);
-                };
-                heroVideo.pause();
-                requestAnimationFrame(step);
-            }
-        })();
 
         // ── Scroll-triggered card reveal ──
         const observer = new IntersectionObserver((entries) => {
