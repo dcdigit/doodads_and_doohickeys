@@ -53,19 +53,22 @@
         .hero-content {
             position: relative;
             z-index: 2;
-            text-align: center;
-            padding: 2rem;
+            text-align: left;
+            padding: 2rem 2rem 2rem clamp(2rem, 6vw, 6rem);
+            width: 100%;
             will-change: transform;
         }
 
         .hero h1 {
-            font-size: clamp(4.5rem, 12vw, 10rem);
+            font-size: clamp(6rem, 18vw, 16rem);
             font-weight: 900;
-            letter-spacing: -0.03em;
+            letter-spacing: -0.04em;
+            line-height: 0.85;
             color: transparent;
             -webkit-text-stroke: 2px rgba(255, 255, 255, 0.7);
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             position: relative;
+            text-transform: uppercase;
         }
 
         .hero p {
@@ -276,7 +279,7 @@
             <source src="hero-bg.mp4" type="video/mp4">
         </video>
         <div class="hero-content">
-            <h1>Sylvan Cummings</h1>
+            <h1>Sylvan<br>Cummings</h1>
             <p>Generative art &amp; creative tools</p>
         </div>
         <a href="#projects" class="scroll-indicator">
