@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio-Stencil // Reaction Diffusion</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        /* Minimalist UI Overlay */
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255,255,255,0.7);
+            pointer-events: none;
+            z-index: 10;
+        }
+        h1 { margin: 0; font-weight: 300; letter-spacing: 2px; font-size: 18px; text-transform: uppercase; }
+        p { margin: 5px 0 0 0; font-size: 11px; opacity: 0.6; }
+        
+        /* GUI Styling */
+        .lil-gui { 
+            --width: 300px;
+            --background-color: rgba(10, 10, 10, 0.9);
+            --text-color: #ddd;
+            --title-background-color: #333;
+            --widget-color: #444;
+            --hover-color: #555;
+            --focus-color: #666;
+            --number-color: #00e5ff; 
+        }
+    </style>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="ui">
+        <h1>Bio-Gen Stencil</h1>
+        <p>REACTION DIFFUSION ENGINE</p>
+        <p>• Drag mouse to add chemical<br>• Let it grow<br>• Spacebar to reset</p>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- CONFIGURATION ---
+        const params = {
+            // Gray-Scott Constants (The "DNA" of the pattern)
+            // Preset: "Coral"
+            feed: 0.0545,
+            kill: 0.0620,
+            diffuseA: 1.0,
+            diffuseB: 0.5,
+            
+            timestep: 1.0,
+            iterations: 8, // Speed of simulation per frame
+            
+            // Visuals
+            color1: '#000000', // Deep void
+            color2: '#0088ff', // Chemical B
+            color3: '#ffffff', // High concentration
+            
+            contrast: 1.2,
+            brightness: 0.0,
+            gradientSmooth: true, // vs Hard Stencil
+            
+            brushSize: 0.05,
+            
+            reset: () => resetSimulation(),
+            screenshot: () => saveImage()
+        };
+
+        // --- SHADERS ---
+
+        // 1. SIMULATION SHADER (The Math)
+        const simFrag = `
+            uniform sampler2D tSource;
+            uniform vec2 uRes;
+            uniform float uFeed;
+            uniform float uKill;
+            uniform float uDa; // Diffusion rate A
+            uniform float uDb; // Diffusion rate B
+            uniform float uDt;
+            uniform vec2 uBrush;
+            uniform float uBrushSize;
+            uniform float uSeed;
+
+            // Laplacian weights (The diffusion logic)
+            // standard 3x3 convolution
+            void main() {
+                vec2 uv = gl_FragCoord.xy / uRes;
+                vec2 pixel = 1.0 / uRes;
+
+                // Current state
+                vec4 color = texture2D(tSource, uv);
+                float a = color.r;
+                float b = color.g;
+
+                // Laplacian (Diffusion)
+                // Center * -1 + Neighbors * weight
+                // Standard isotropic stencil
+                vec2 sum = vec2(0.0);
+                
+                sum += texture2D(tSource, uv + vec2(-1, -1)*pixel).rg * 0.05;
+                sum += texture2D(tSource, uv + vec2( 0, -1)*pixel).rg * 0.2;
+                sum += texture2D(tSource, uv + vec2( 1, -1)*pixel).rg * 0.05;
+                sum += texture2D(tSource, uv + vec2(-1,  0)*pixel).rg * 0.2;
+                sum += texture2D(tSource, uv + vec2( 0,  0)*pixel).rg * -1.0; // Center
+                sum += texture2D(tSource, uv + vec2( 1,  0)*pixel).rg * 0.2;
+                sum += texture2D(tSource, uv + vec2(-1,  1)*pixel).rg * 0.05;
+                sum += texture2D(tSource, uv + vec2( 0,  1)*pixel).rg * 0.2;
+                sum += texture2D(tSource, uv + vec2( 1,  1)*pixel).rg * 0.05;
+
+                // Reaction-Diffusion Formula
+                // da = Da * lapA - A*B*B + Feed*(1-A)
+                // db = Db * lapB + A*B*B - (Kill + Feed)*B
+
+                float reaction = a * b * b;
+                float da = uDa * sum.r - reaction + uFeed * (1.0 - a);
+                float db = uDb * sum.g + reaction - (uKill + uFeed) * b;
+
+                a += da * uDt;
+                b += db * uDt;
+
+                // Mouse Interaction (Add Chemical B)
+                float dist = distance(uv, uBrush);
+                if(uBrush.x > 0.0 && dist < uBrushSize) {
+                    b = 0.9;
+                }
+                
+                // Random seeding at start
+                if (uSeed > 0.5) {
+                   // Random noise in center
+                   vec2 c = uv - 0.5;
+                   if (length(c) < 0.2) b = 0.5 + fract(sin(dot(uv, vec2(12.9,78.2)))*43758.5)*0.5;
+                }
+
+                a = clamp(a, 0.0, 1.0);
+                b = clamp(b, 0.0, 1.0);
+
+                gl_FragColor = vec4(a, b, 0.0, 1.0);
+            }
+        `;
+
+        // 2. RENDER SHADER (The Color Mapping)
+        const renderFrag = `
+            uniform sampler2D tSource;
+            uniform vec3 uColor1;
+            uniform vec3 uColor2;
+            uniform vec3 uColor3;
+            uniform float uContrast;
+            uniform float uBrightness;
+            uniform bool uSmooth;
+            varying vec2 vUv;
+
+            void main() {
+                vec4 data = texture2D(tSource, vUv);
+                
+                // We visualize Chemical B (The "Pattern")
+                // Usually Chemical A is background (1.0) and B grows into it.
+                float val = data.g; 
+                
+                // Enhance
+                // Safe way to invert: usually we want to see where B is HIGH
+                // Or simulate lighting
+                
+                // Let's create a gradient map
+                // 0.0 -> Color1
+                // 0.5 -> Color2
+                // 1.0 -> Color3
+                
+                // Adjust contrast
+                val = (val - 0.5) * uContrast + 0.5 + uBrightness;
+                
+                if (!uSmooth) {
+                    // Stencil Mode: Hard Cut
+                    val = step(0.5, val);
+                } else {
+                    val = clamp(val, 0.0, 1.0);
+                }
+
+                vec3 col;
+                if (val < 0.5) {
+                    col = mix(uColor1, uColor2, val * 2.0);
+                } else {
+                    col = mix(uColor2, uColor3, (val - 0.5) * 2.0);
+                }
+
+                gl_FragColor = vec4(col, 1.0);
+            }
+        `;
+
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        // --- SETUP ---
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const scene = new THREE.Scene();
+        const plane = new THREE.PlaneGeometry(2, 2);
+        
+        // --- PING PONG BUFFERS ---
+        // We need two textures to simulate: Read Previous -> Write Next
+        const width = window.innerWidth; // Simulation res (1:1 with screen)
+        const height = window.innerHeight;
+        
+        // FloatType is crucial for simulation precision
+        const options = {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType, // Requires WebGL 2 or extension
+            wrapS: THREE.RepeatWrapping, // Seamless patterns!
+            wrapT: THREE.RepeatWrapping
+        };
+        
+        let targetA = new THREE.WebGLRenderTarget(width, height, options);
+        let targetB = new THREE.WebGLRenderTarget(width, height, options);
+
+        // --- MATERIALS ---
+        const simMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                tSource: { value: null },
+                uRes: { value: new THREE.Vector2(width, height) },
+                uFeed: { value: params.feed },
+                uKill: { value: params.kill },
+                uDa: { value: params.diffuseA },
+                uDb: { value: params.diffuseB },
+                uDt: { value: params.timestep },
+                uBrush: { value: new THREE.Vector2(-1, -1) },
+                uBrushSize: { value: params.brushSize },
+                uSeed: { value: 1.0 } // 1.0 triggers seed on first frame
+            },
+            vertexShader,
+            fragmentShader: simFrag
+        });
+
+        const renderMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                tSource: { value: null },
+                uColor1: { value: new THREE.Color(params.color1) },
+                uColor2: { value: new THREE.Color(params.color2) },
+                uColor3: { value: new THREE.Color(params.color3) },
+                uContrast: { value: params.contrast },
+                uBrightness: { value: params.brightness },
+                uSmooth: { value: params.gradientSmooth }
+            },
+            vertexShader,
+            fragmentShader: renderFrag
+        });
+
+        const quad = new THREE.Mesh(plane, simMaterial); // Start with sim
+        scene.add(quad);
+
+        // --- INPUT ---
+        const mouse = new THREE.Vector2(-1, -1);
+        
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX / window.innerWidth;
+            mouse.y = 1.0 - (e.clientY / window.innerHeight);
+        });
+        window.addEventListener('mousedown', () => { document.body.style.cursor = 'crosshair'; });
+        window.addEventListener('mouseup', () => { document.body.style.cursor = 'default'; mouse.set(-1, -1); });
+        
+        // Touch support
+        window.addEventListener('touchmove', e => {
+            e.preventDefault();
+            mouse.x = e.touches[0].clientX / window.innerWidth;
+            mouse.y = 1.0 - (e.touches[0].clientY / window.innerHeight);
+        }, { passive: false });
+        window.addEventListener('touchend', () => mouse.set(-1, -1));
+
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space') resetSimulation();
+        });
+
+        function resetSimulation() {
+            simMaterial.uniforms.uSeed.value = 1.0;
+            // The simulation shader handles the seeding logic when uSeed is high
+            // We need to render at least one frame with seed high
+            setTimeout(() => { simMaterial.uniforms.uSeed.value = 0.0; }, 100);
+        }
+
+        function saveImage() {
+            renderer.render(scene, camera);
+            const link = document.createElement('a');
+            link.download = `bio-stencil-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL();
+            link.click();
+        }
+
+        // --- GUI SETUP ---
+        const gui = new GUI({ title: 'BIO LAB' });
+        
+        const fSim = gui.addFolder('1. Biological Rules');
+        fSim.add(params, 'feed', 0.01, 0.1).onChange(v => simMaterial.uniforms.uFeed.value = v);
+        fSim.add(params, 'kill', 0.01, 0.1).onChange(v => simMaterial.uniforms.uKill.value = v);
+        // Presets for Feed/Kill
+        const presets = {
+            'Coral': [0.0545, 0.062],
+            'Mitosis': [0.0367, 0.0649],
+            'Mazes': [0.029, 0.057],
+            'Chaos': [0.025, 0.060]
+        };
+        const fPresets = fSim.addFolder('Quick Presets');
+        for(let key in presets) {
+            fPresets.add({ [key]: () => {
+                params.feed = presets[key][0];
+                params.kill = presets[key][1];
+                simMaterial.uniforms.uFeed.value = params.feed;
+                simMaterial.uniforms.uKill.value = params.kill;
+                // Update GUI controllers
+                gui.controllersRecursive().forEach(c => c.updateDisplay());
+                resetSimulation();
+            }}, key);
+        }
+
+        const fSpeed = gui.addFolder('2. Speed & Flow');
+        fSpeed.add(params, 'iterations', 1, 50, 1).name('Growth Speed');
+        fSpeed.add(params, 'diffuseA', 0.1, 1.2).name('Background Flow').onChange(v => simMaterial.uniforms.uDa.value = v);
+        
+        const fRender = gui.addFolder('3. Stencil Look');
+        fRender.addColor(params, 'color1').name('Void Color').onChange(v => renderMaterial.uniforms.uColor1.value.set(v));
+        fRender.addColor(params, 'color2').name('Edge Color').onChange(v => renderMaterial.uniforms.uColor2.value.set(v));
+        fRender.addColor(params, 'color3').name('Core Color').onChange(v => renderMaterial.uniforms.uColor3.value.set(v));
+        fRender.add(params, 'contrast', 0.1, 5.0).onChange(v => renderMaterial.uniforms.uContrast.value = v);
+        fRender.add(params, 'gradientSmooth').name('Gradient / Hard Cut').onChange(v => renderMaterial.uniforms.uSmooth.value = v);
+        
+        gui.add(params, 'brushSize', 0.01, 0.2).name('Brush Size').onChange(v => simMaterial.uniforms.uBrushSize.value = v);
+        gui.add(params, 'reset').name('Clear / Reset');
+        gui.add(params, 'screenshot').name('Save Image');
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 1. SIMULATION STEPS (Multiple per frame for speed)
+            quad.material = simMaterial;
+            simMaterial.uniforms.uBrush.value.copy(mouse);
+
+            for(let i = 0; i < params.iterations; i++) {
+                // Read from A, Write to B
+                simMaterial.uniforms.tSource.value = targetA.texture;
+                renderer.setRenderTarget(targetB);
+                renderer.render(scene, camera);
+
+                // Swap A and B
+                let temp = targetA;
+                targetA = targetB;
+                targetB = temp;
+            }
+
+            // 2. RENDER STEP
+            // Draw final result to screen using Render Shader
+            quad.material = renderMaterial;
+            renderMaterial.uniforms.tSource.value = targetA.texture;
+            renderer.setRenderTarget(null); // Screen
+            renderer.render(scene, camera);
+        }
+
+        // Start
+        resetSimulation();
+        animate();
+        
+        // Handle Resize
+        window.addEventListener('resize', () => {
+           renderer.setSize(window.innerWidth, window.innerHeight);
+           const w = window.innerWidth; 
+           const h = window.innerHeight;
+           targetA.setSize(w, h);
+           targetB.setSize(w, h);
+           simMaterial.uniforms.uRes.value.set(w, h);
+           resetSimulation();
+        });
+
+    </script>
+</body>
+</html>

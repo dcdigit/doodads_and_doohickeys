@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Gradient ULTRA + Presets</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        canvas { display: block; }
+        /* Make GUI wider for better control */
+        .lil-gui { --width: 320px; } 
+    </style>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <input type="file" id="file-input" style="display: none;" accept=".json">
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- CONFIGURATION & STATE ---
+        const config = {
+            // Meta
+            width: window.innerWidth,
+            height: window.innerHeight,
+            
+            // 1. Colors
+            bgColor: '#111111',
+            colorA: '#ff3366', 
+            colorB: '#0088ff',
+            
+            // 2. Grid
+            gridX: 30,
+            gridY: 30,
+            warpStrength: 0.0,
+            randomPos: 0.0,
+            
+            // 3. Geometry
+            shapeStart: 0, 
+            shapeEnd: 1,   
+            shapeStretchX: 1.0, 
+            shapeStretchY: 1.0, 
+            roundness: 0.0,     
+            baseRotation: 0,
+            randomRot: 0.0,     
+            
+            // 4. Gradient Field
+            gradientType: 0, 
+            gradientPower: 1.0,
+            gradientOffset: 0.0, 
+            invertGradient: false,
+            mirrorGradient: false,
+            minSize: 0.1,
+            maxSize: 0.8,
+            smoothing: 0.02,
+            
+            // 5. Pulse / Animation
+            timeSpeed: 0.2,
+            pulseActive: false,
+            pulseSpeed: 1.0,
+            pulseFreq: 5.0,     
+            pulseAmp: 0.2,      
+            noiseScale: 2.0,
+
+            // Actions
+            saveImage: () => saveCanvas(),
+            randomize: () => randomizeParams(),
+            savePreset: () => exportPreset(),
+            loadPreset: () => document.getElementById('file-input').click()
+        };
+
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uTime;
+            uniform float uAspect;
+            uniform vec2 uGrid;
+            
+            uniform vec3 uColorA;
+            uniform vec3 uColorB;
+            uniform vec3 uBgColor;
+            
+            uniform int uShapeStart;
+            uniform int uShapeEnd;
+            uniform vec2 uShapeStretch;
+            uniform float uRoundness;
+            
+            uniform float uBaseRotation;
+            uniform float uRandomPos;
+            uniform float uRandomRot;
+            
+            uniform int uGradientType;
+            uniform float uGradientPower;
+            uniform float uGradientOffset;
+            uniform bool uInvert;
+            uniform bool uMirror;
+            
+            uniform bool uPulseActive;
+            uniform float uPulseSpeed;
+            uniform float uPulseFreq;
+            uniform float uPulseAmp;
+            
+            uniform float uWarp;
+            uniform float uNoiseScale;
+            uniform float uMinSize;
+            uniform float uMaxSize;
+            uniform float uSmoothing;
+
+            varying vec2 vUv;
+
+            float random(vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
+
+            // Simplex Noise
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+            float snoise(vec2 v) {
+                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                vec2 i  = floor(v + dot(v, C.yy) );
+                vec2 x0 = v - i + dot(i, C.xx);
+                vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                vec4 x12 = x0.xyxy + C.xxzz;
+                x12.xy -= i1;
+                i = mod289(i);
+                vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                m = m*m ; m = m*m ;
+                vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                vec3 h = abs(x) - 0.5;
+                vec3 ox = floor(x + 0.5);
+                vec3 a0 = x - ox;
+                m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                vec3 g;
+                g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                return 130.0 * dot(m, g);
+            }
+
+            vec2 rotate(vec2 v, float a) {
+                float s = sin(a); float c = cos(a);
+                mat2 m = mat2(c, -s, s, c);
+                return m * v;
+            }
+
+            float sdBox(vec2 p, vec2 b, float r) {
+                vec2 d = abs(p) - b + r;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+            }
+
+            float getShapeDist(int type, vec2 p, float size) {
+                vec2 pStr = p / uShapeStretch;
+                if (type == 0) return length(pStr) - size;
+                else if (type == 1) return sdBox(pStr, vec2(size), uRoundness * size); 
+                else return sdBox(pStr, vec2(0.5, size), uRoundness * size);
+            }
+
+            void main() {
+                vec2 st = vUv;
+                
+                // Noise Warp
+                float n = snoise(vec2(st.x, st.y + uTime*0.1) * uNoiseScale);
+                st += vec2(n) * uWarp;
+
+                vec2 gridSt = st * uGrid;
+                vec2 cellId = floor(gridSt);
+                
+                // Jitter
+                vec2 randOffset = vec2(random(cellId) - 0.5, random(cellId + 100.0) - 0.5) * uRandomPos;
+                vec2 cellUv = fract(gridSt) - 0.5 - randOffset;
+
+                // Gradient Influence
+                vec2 normId = (cellId + 0.5) / uGrid; 
+                float influence = 0.0;
+                
+                if (uGradientType == 0) { // Radial
+                    vec2 aspectCorrected = (normId - 0.5);
+                    aspectCorrected.x *= uAspect;
+                    influence = length(aspectCorrected) * 2.0;
+                } else if (uGradientType == 1) { // Linear X
+                    influence = normId.x;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else if (uGradientType == 2) { // Linear Y
+                    influence = normId.y;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else { // Noise
+                     influence = snoise(normId * uNoiseScale + uTime * 0.1) * 0.5 + 0.5;
+                }
+
+                influence += uGradientOffset;
+                if (uInvert) influence = 1.0 - influence;
+                
+                // Pulse
+                if (uPulseActive) {
+                    vec2 centerVec = (normId - 0.5);
+                    centerVec.x *= uAspect;
+                    float dist = length(centerVec);
+                    float wave = sin(dist * uPulseFreq - uTime * uPulseSpeed);
+                    influence += wave * uPulseAmp;
+                }
+
+                influence = clamp(influence, 0.0, 1.0);
+                influence = pow(influence, uGradientPower);
+
+                // Shape
+                float currentSize = mix(uMaxSize, uMinSize, influence);
+                float r = currentSize * 0.5;
+
+                float cellRot = uBaseRotation + (random(cellId) - 0.5) * uRandomRot * 6.28;
+                vec2 rotatedUv = rotate(cellUv, cellRot);
+
+                float d1 = getShapeDist(uShapeStart, rotatedUv, r);
+                float d2 = getShapeDist(uShapeEnd, rotatedUv, r);
+                float dFinal = mix(d1, d2, influence);
+
+                // Color
+                float alpha = 1.0 - smoothstep(0.0, uSmoothing, dFinal);
+                vec3 c = mix(uColorA, uColorB, influence);
+                vec3 finalColor = mix(uBgColor, c, alpha);
+                
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // --- THREE.JS ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(config.width, config.height);
+        container.appendChild(renderer.domElement);
+
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uTime: { value: 0 },
+                uAspect: { value: config.width / config.height },
+                uGrid: { value: new THREE.Vector2(config.gridX, config.gridY) },
+                uColorA: { value: new THREE.Color(config.colorA) },
+                uColorB: { value: new THREE.Color(config.colorB) },
+                uBgColor: { value: new THREE.Color(config.bgColor) },
+                uShapeStart: { value: config.shapeStart },
+                uShapeEnd: { value: config.shapeEnd },
+                uShapeStretch: { value: new THREE.Vector2(config.shapeStretchX, config.shapeStretchY) },
+                uRoundness: { value: config.roundness },
+                uBaseRotation: { value: config.baseRotation },
+                uRandomPos: { value: config.randomPos },
+                uRandomRot: { value: config.randomRot },
+                uGradientType: { value: config.gradientType },
+                uGradientPower: { value: config.gradientPower },
+                uGradientOffset: { value: config.gradientOffset },
+                uInvert: { value: config.invertGradient },
+                uMirror: { value: config.mirrorGradient },
+                uPulseActive: { value: config.pulseActive },
+                uPulseSpeed: { value: config.pulseSpeed },
+                uPulseFreq: { value: config.pulseFreq },
+                uPulseAmp: { value: config.pulseAmp },
+                uWarp: { value: config.warpStrength },
+                uNoiseScale: { value: config.noiseScale },
+                uMinSize: { value: config.minSize },
+                uMaxSize: { value: config.maxSize },
+                uSmoothing: { value: config.smoothing }
+            }
+        });
+
+        scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+        // --- CORE LOGIC ---
+        function updateUniforms() {
+            const u = material.uniforms;
+            u.uGrid.value.set(config.gridX, config.gridY);
+            u.uColorA.value.set(config.colorA);
+            u.uColorB.value.set(config.colorB);
+            u.uBgColor.value.set(config.bgColor);
+            u.uShapeStart.value = config.shapeStart;
+            u.uShapeEnd.value = config.shapeEnd;
+            u.uShapeStretch.value.set(config.shapeStretchX, config.shapeStretchY);
+            u.uRoundness.value = config.roundness;
+            u.uBaseRotation.value = config.baseRotation;
+            u.uRandomPos.value = config.randomPos;
+            u.uRandomRot.value = config.randomRot;
+            u.uGradientType.value = config.gradientType;
+            u.uGradientPower.value = config.gradientPower;
+            u.uGradientOffset.value = config.gradientOffset;
+            u.uInvert.value = config.invertGradient;
+            u.uMirror.value = config.mirrorGradient;
+            u.uPulseActive.value = config.pulseActive;
+            u.uPulseSpeed.value = config.pulseSpeed;
+            u.uPulseFreq.value = config.pulseFreq;
+            u.uPulseAmp.value = config.pulseAmp;
+            u.uWarp.value = config.warpStrength;
+            u.uNoiseScale.value = config.noiseScale;
+            u.uMinSize.value = config.minSize;
+            u.uMaxSize.value = config.maxSize;
+            u.uSmoothing.value = config.smoothing;
+            u.uAspect.value = config.width / config.height;
+        }
+
+        function resizeCanvas() {
+            renderer.setSize(config.width, config.height);
+            updateUniforms();
+        }
+
+        function saveCanvas() {
+            const link = document.createElement('a');
+            link.download = `design-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- PRESET SYSTEM ---
+        function exportPreset() {
+            const data = JSON.stringify(config, null, 2);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `preset-${Date.now()}.json`;
+            link.click();
+        }
+
+        function loadPreset(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const loadedConfig = JSON.parse(e.target.result);
+                    // Copy loaded values into config, skipping functions
+                    Object.keys(loadedConfig).forEach(key => {
+                        if (typeof config[key] !== 'function' && key !== 'width' && key !== 'height') {
+                            config[key] = loadedConfig[key];
+                        }
+                    });
+                    // Refresh GUI
+                    gui.controllersRecursive().forEach(c => c.updateDisplay());
+                    updateUniforms();
+                } catch (err) {
+                    alert("Error loading preset: " + err);
+                }
+            };
+            reader.readAsText(file);
+            // Reset input so same file can be loaded again
+            event.target.value = '';
+        }
+
+        function getRandomColor() {
+            return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+        }
+
+        function randomizeParams() {
+            config.colorA = getRandomColor();
+            config.colorB = getRandomColor();
+            config.bgColor = Math.random() > 0.5 ? '#000000' : getRandomColor();
+            
+            config.gridX = Math.floor(5 + Math.random() * 60);
+            config.gridY = Math.floor(5 + Math.random() * 60);
+            
+            // Randomize Shapes
+            config.shapeStart = Math.floor(Math.random() * 3);
+            config.shapeEnd = Math.floor(Math.random() * 3);
+            config.shapeStretchX = 0.5 + Math.random() * 1.5;
+            config.shapeStretchY = 0.5 + Math.random() * 1.5;
+            config.baseRotation = Math.random() * 6.28;
+            
+            // Gradient
+            config.gradientType = Math.floor(Math.random() * 4);
+            config.mirrorGradient = Math.random() > 0.5;
+            config.invertGradient = Math.random() > 0.5;
+            config.minSize = Math.random() * 0.5;
+            config.maxSize = 0.5 + Math.random() * 0.7;
+            
+            // Chance for Chaos
+            const chaos = Math.random();
+            if (chaos > 0.7) {
+                config.warpStrength = Math.random() * 0.5;
+                config.randomPos = Math.random() * 0.5;
+            } else {
+                config.warpStrength = 0;
+                config.randomPos = 0;
+            }
+            
+            // Chance for Pulse
+            if (Math.random() > 0.6) {
+                config.pulseActive = true;
+                config.pulseFreq = 2 + Math.random() * 10;
+            } else {
+                config.pulseActive = false;
+            }
+
+            // Update GUI and Engine
+            gui.controllersRecursive().forEach(c => c.updateDisplay());
+            updateUniforms();
+        }
+
+        // --- GUI SETUP ---
+        const gui = new GUI({ title: 'ULTRA STUDIO', width: 320 });
+        
+        // Helper to get all controllers for updates
+        gui.controllersRecursive = () => {
+            let controllers = [];
+            const traverse = (folder) => {
+                controllers.push(...folder.controllers);
+                folder.folders.forEach(traverse);
+            };
+            traverse(gui);
+            return controllers;
+        }
+
+        const fSys = gui.addFolder('💾 System & Presets');
+        fSys.add(config, 'randomize').name('🎲 Randomize All');
+        fSys.add(config, 'savePreset').name('💾 Save Preset (.json)');
+        fSys.add(config, 'loadPreset').name('📂 Load Preset (.json)');
+
+        const fColor = gui.addFolder('1. Colors');
+        fColor.addColor(config, 'colorA').onChange(updateUniforms);
+        fColor.addColor(config, 'colorB').onChange(updateUniforms);
+        fColor.addColor(config, 'bgColor').onChange(updateUniforms);
+
+        const fGrid = gui.addFolder('2. Grid');
+        fGrid.add(config, 'gridX', 1, 200, 1).onChange(updateUniforms);
+        fGrid.add(config, 'gridY', 1, 200, 1).onChange(updateUniforms);
+        fGrid.add(config, 'warpStrength', 0, 1.0).name('Warp (Melt)').onChange(updateUniforms);
+        fGrid.add(config, 'randomPos', 0, 1.0).name('Jitter Pos').onChange(updateUniforms);
+
+        const fShape = gui.addFolder('3. Shape');
+        const shapes = { Circle: 0, Square: 1, Line: 2 };
+        fShape.add(config, 'shapeStart', shapes).onChange(updateUniforms);
+        fShape.add(config, 'shapeEnd', shapes).onChange(updateUniforms);
+        fShape.add(config, 'shapeStretchX', 0.1, 4.0).onChange(updateUniforms);
+        fShape.add(config, 'shapeStretchY', 0.1, 4.0).onChange(updateUniforms);
+        fShape.add(config, 'roundness', 0.0, 0.5).onChange(updateUniforms);
+        fShape.add(config, 'baseRotation', 0, 6.28).onChange(updateUniforms);
+        fShape.add(config, 'randomRot', 0, 1.0).name('Chaos Rot').onChange(updateUniforms);
+
+        const fGrad = gui.addFolder('4. Field');
+        fGrad.add(config, 'gradientType', { Radial: 0, LinearX: 1, LinearY: 2, Noise: 3 }).onChange(updateUniforms);
+        fGrad.add(config, 'gradientPower', 0.1, 5.0).name('Curve').onChange(updateUniforms);
+        fGrad.add(config, 'gradientOffset', -1.0, 1.0).onChange(updateUniforms);
+        fGrad.add(config, 'mirrorGradient').onChange(updateUniforms);
+        fGrad.add(config, 'invertGradient').onChange(updateUniforms);
+        fGrad.add(config, 'minSize', 0, 1.5).onChange(updateUniforms);
+        fGrad.add(config, 'maxSize', 0, 1.5).onChange(updateUniforms);
+        fGrad.add(config, 'smoothing', 0.001, 1.0).onChange(updateUniforms);
+
+        const fPulse = gui.addFolder('5. Pulse');
+        fPulse.add(config, 'timeSpeed', 0.0, 5.0).name('Global Speed');
+        fPulse.add(config, 'pulseActive').onChange(updateUniforms);
+        fPulse.add(config, 'pulseAmp', 0.0, 1.0).onChange(updateUniforms);
+        fPulse.add(config, 'pulseFreq', 1.0, 20.0).onChange(updateUniforms);
+        fPulse.add(config, 'pulseSpeed', -5.0, 5.0).onChange(updateUniforms);
+
+        const fExport = gui.addFolder('Export');
+        fExport.add(config, 'width', 100, 4096, 1).onChange(resizeCanvas);
+        fExport.add(config, 'height', 100, 4096, 1).onChange(resizeCanvas);
+        fExport.add(config, 'saveImage').name('📸 Download PNG');
+
+        // File Input Listener
+        document.getElementById('file-input').addEventListener('change', loadPreset);
+
+        // Loop
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            material.uniforms.uTime.value += clock.getDelta() * config.timeSpeed;
+            renderer.render(scene, camera);
+        }
+        updateUniforms();
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Gradient ULTRA // PRO</title>
+    <style>
+        /* --- MODERN UI STYLING --- */
+        :root {
+            --bg-color: #0d0d0d;
+            --panel-bg: rgba(20, 20, 20, 0.85);
+            --accent: #0088ff;
+            --text: #e0e0e0;
+        }
+        body { margin: 0; overflow: hidden; background: var(--bg-color); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--text); }
+        
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
+        
+        /* Floating HUD for Presets */
+        #hud {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+            background: var(--panel-bg);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .hud-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .hud-btn:hover, .hud-btn.active {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 136, 255, 0.4);
+        }
+
+        /* Customizing lil-gui to look "Pro" */
+        .lil-gui { 
+            --width: 320px; 
+            --background-color: var(--panel-bg);
+            --text-color: #eee;
+            --title-background-color: #0055aa;
+            --widget-color: #333;
+            --hover-color: #444;
+            --focus-color: #555;
+            --number-color: #2cc9ff;
+            --string-color: #a2ff00;
+            font-size: 13px;
+        }
+        .lil-gui.root { position: absolute; top: 10px; right: 10px; z-index: 11; }
+    </style>
+    
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="hud">
+        <button class="hud-btn" onclick="applyPreset('default')">Default</button>
+        <button class="hud-btn" onclick="applyPreset('cyber')">Cyber Grid</button>
+        <button class="hud-btn" onclick="applyPreset('liquid')">Liquid Metal</button>
+        <button class="hud-btn" onclick="applyPreset('void')">The Void</button>
+        <button class="hud-btn" onclick="applyPreset('retro')">Retro Wave</button>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- GLOBAL CONFIGURATION STATE ---
+        const config = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            bgColor: '#111111',
+            colorA: '#ff3366', 
+            colorB: '#0088ff',
+            
+            // Grid
+            gridX: 30,
+            gridY: 30,
+            
+            // Geometry
+            shapeStart: 0, 
+            shapeEnd: 1,   
+            shapeStretchX: 1.0, 
+            shapeStretchY: 1.0, 
+            roundness: 0.0,     
+            
+            // Transform
+            baseRotation: 0,
+            randomPos: 0.0,     
+            randomRot: 0.0,     
+            
+            // Gradient Field
+            gradientType: 0, 
+            gradientPower: 1.0,
+            gradientOffset: 0.0, 
+            invertGradient: false,
+            mirrorGradient: false,
+            
+            // Pulse / Ripple
+            pulseActive: false,
+            pulseSpeed: 1.0,
+            pulseFreq: 5.0,     
+            pulseAmp: 0.2,      
+            
+            // Sizes
+            minSize: 0.1,
+            maxSize: 0.8,
+            smoothing: 0.02,
+            
+            // Noise / Warp
+            warpStrength: 0.0,
+            noiseScale: 2.0,
+            timeSpeed: 0.2,
+
+            // Automation Config (The new Engine)
+            autoParam: 'none',
+            autoSpeed: 0.5,
+            autoAmp: 0.5,
+            autoCenter: 0.5, // The 'center' value to oscillate around
+
+            saveImage: () => saveCanvas()
+        };
+
+        // --- SHADER DEFINITIONS (Keep Logic, Improve Formatting) ---
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uTime;
+            uniform float uAspect;
+            uniform vec2 uGrid;
+            uniform vec3 uColorA;
+            uniform vec3 uColorB;
+            uniform vec3 uBgColor;
+            
+            uniform int uShapeStart;
+            uniform int uShapeEnd;
+            uniform vec2 uShapeStretch;
+            uniform float uRoundness;
+            
+            uniform float uBaseRotation;
+            uniform float uRandomPos;
+            uniform float uRandomRot;
+            
+            uniform int uGradientType;
+            uniform float uGradientPower;
+            uniform float uGradientOffset;
+            uniform bool uInvert;
+            uniform bool uMirror;
+            
+            uniform bool uPulseActive;
+            uniform float uPulseSpeed;
+            uniform float uPulseFreq;
+            uniform float uPulseAmp;
+            
+            uniform float uWarp;
+            uniform float uNoiseScale;
+            uniform float uMinSize;
+            uniform float uMaxSize;
+            uniform float uSmoothing;
+
+            varying vec2 vUv;
+
+            float random(vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
+
+            // Simplex Noise (Standard Implementation)
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+            float snoise(vec2 v) {
+                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                vec2 i  = floor(v + dot(v, C.yy) );
+                vec2 x0 = v - i + dot(i, C.xx);
+                vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                vec4 x12 = x0.xyxy + C.xxzz;
+                x12.xy -= i1;
+                i = mod289(i);
+                vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                m = m*m ; m = m*m ;
+                vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                vec3 h = abs(x) - 0.5;
+                vec3 ox = floor(x + 0.5);
+                vec3 a0 = x - ox;
+                m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                vec3 g;
+                g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                return 130.0 * dot(m, g);
+            }
+
+            vec2 rotate(vec2 v, float a) {
+                float s = sin(a); float c = cos(a);
+                mat2 m = mat2(c, -s, s, c);
+                return m * v;
+            }
+
+            float sdBox(vec2 p, vec2 b, float r) {
+                vec2 d = abs(p) - b + r;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+            }
+
+            float getShapeDist(int type, vec2 p, float size) {
+                vec2 pStr = p / uShapeStretch;
+                if (type == 0) { // Circle
+                    return length(pStr) - size;
+                } else if (type == 1) { // Square
+                    return sdBox(pStr, vec2(size), uRoundness * size); 
+                } else { // Line / Rect
+                    return sdBox(pStr, vec2(0.5 * uShapeStretch.x, size), uRoundness * size);
+                }
+            }
+
+            void main() {
+                vec2 st = vUv;
+                
+                // Warp
+                float n = snoise(vec2(st.x, st.y + uTime*0.1) * uNoiseScale);
+                st += vec2(n) * uWarp;
+
+                vec2 gridSt = st * uGrid;
+                vec2 cellId = floor(gridSt);
+                
+                vec2 randOffset = vec2(random(cellId) - 0.5, random(cellId + 100.0) - 0.5) * uRandomPos;
+                vec2 cellUv = fract(gridSt) - 0.5 - randOffset;
+
+                vec2 normId = (cellId + 0.5) / uGrid; 
+                float influence = 0.0;
+                
+                // Gradient Logic
+                if (uGradientType == 0) { 
+                    vec2 aspectCorrected = (normId - 0.5);
+                    aspectCorrected.x *= uAspect;
+                    influence = length(aspectCorrected) * 2.0;
+                } else if (uGradientType == 1) { 
+                    influence = normId.x;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else if (uGradientType == 2) { 
+                    influence = normId.y;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else { 
+                     influence = snoise(normId * uNoiseScale + uTime * 0.1) * 0.5 + 0.5;
+                }
+
+                influence += uGradientOffset;
+                if (uInvert) influence = 1.0 - influence;
+                
+                if (uPulseActive) {
+                    vec2 centerVec = (normId - 0.5);
+                    centerVec.x *= uAspect;
+                    float dist = length(centerVec);
+                    float wave = sin(dist * uPulseFreq - uTime * uPulseSpeed);
+                    influence += wave * uPulseAmp;
+                }
+
+                influence = clamp(influence, 0.0, 1.0);
+                influence = pow(influence, uGradientPower);
+
+                float currentSize = mix(uMaxSize, uMinSize, influence);
+                float r = currentSize * 0.5;
+
+                float cellRot = uBaseRotation;
+                cellRot += (random(cellId) - 0.5) * uRandomRot * 6.28; 
+                
+                vec2 rotatedUv = rotate(cellUv, cellRot);
+
+                float d1 = getShapeDist(uShapeStart, rotatedUv, r);
+                float d2 = getShapeDist(uShapeEnd, rotatedUv, r);
+                float dFinal = mix(d1, d2, influence);
+
+                float alpha = 1.0 - smoothstep(0.0, uSmoothing, dFinal);
+                
+                vec3 c = mix(uColorA, uColorB, influence);
+                vec3 finalColor = mix(uBgColor, c, alpha);
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // --- THREE.JS INIT ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(config.width, config.height);
+        container.appendChild(renderer.domElement);
+
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uTime: { value: 0 },
+                uAspect: { value: config.width / config.height },
+                uGrid: { value: new THREE.Vector2(config.gridX, config.gridY) },
+                uColorA: { value: new THREE.Color(config.colorA) },
+                uColorB: { value: new THREE.Color(config.colorB) },
+                uBgColor: { value: new THREE.Color(config.bgColor) },
+                uShapeStart: { value: config.shapeStart },
+                uShapeEnd: { value: config.shapeEnd },
+                uShapeStretch: { value: new THREE.Vector2(config.shapeStretchX, config.shapeStretchY) },
+                uRoundness: { value: config.roundness },
+                uBaseRotation: { value: config.baseRotation },
+                uRandomPos: { value: config.randomPos },
+                uRandomRot: { value: config.randomRot },
+                uGradientType: { value: config.gradientType },
+                uGradientPower: { value: config.gradientPower },
+                uGradientOffset: { value: config.gradientOffset },
+                uInvert: { value: config.invertGradient },
+                uMirror: { value: config.mirrorGradient },
+                uPulseActive: { value: config.pulseActive },
+                uPulseSpeed: { value: config.pulseSpeed },
+                uPulseFreq: { value: config.pulseFreq },
+                uPulseAmp: { value: config.pulseAmp },
+                uWarp: { value: config.warpStrength },
+                uNoiseScale: { value: config.noiseScale },
+                uMinSize: { value: config.minSize },
+                uMaxSize: { value: config.maxSize },
+                uSmoothing: { value: config.smoothing }
+            }
+        });
+
+        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(quad);
+
+        // --- PRESET SYSTEM ---
+        const presets = {
+            'default': { ...config },
+            'cyber': { 
+                bgColor: '#000000', colorA: '#00ffaa', colorB: '#aa00ff',
+                gridX: 60, gridY: 60, shapeStart: 1, shapeEnd: 0,
+                pulseActive: true, pulseSpeed: 2, pulseFreq: 10,
+                warpStrength: 0.1, noiseScale: 4.0
+            },
+            'liquid': {
+                bgColor: '#051b33', colorA: '#22aaff', colorB: '#ffffff',
+                gridX: 40, gridY: 40, shapeStart: 0, shapeEnd: 0,
+                warpStrength: 0.5, smoothing: 0.2, noiseScale: 1.5,
+                gradientType: 3
+            },
+            'void': {
+                bgColor: '#000000', colorA: '#333333', colorB: '#111111',
+                gridX: 80, gridY: 80, minSize: 0.8, maxSize: 0.0,
+                shapeStart: 1, shapeEnd: 1, randomRot: 0.5,
+                pulseActive: true, pulseAmp: 0.5, pulseFreq: 3.0
+            },
+            'retro': {
+                bgColor: '#1a0b1f', colorA: '#ff0099', colorB: '#ffaa00',
+                gridX: 20, gridY: 15, shapeStart: 2, shapeEnd: 2,
+                shapeStretchX: 3.0, gradientType: 2, mirrorGradient: true,
+                minSize: 0.1, maxSize: 0.9
+            }
+        };
+
+        window.applyPreset = (name) => {
+            const p = presets[name];
+            if (!p) return;
+            
+            // Soft merge props (avoid overwriting automation config)
+            Object.keys(p).forEach(k => {
+                if (config.hasOwnProperty(k) && k !== 'width' && k !== 'height') {
+                    config[k] = p[k];
+                }
+            });
+            updateUniforms();
+            gui.controllersRecursive().forEach(c => c.updateDisplay());
+        };
+
+        // --- UPDATES ---
+        function updateUniforms() {
+            const u = material.uniforms;
+            u.uGrid.value.set(config.gridX, config.gridY);
+            u.uColorA.value.set(config.colorA);
+            u.uColorB.value.set(config.colorB);
+            u.uBgColor.value.set(config.bgColor);
+            u.uShapeStart.value = config.shapeStart;
+            u.uShapeEnd.value = config.shapeEnd;
+            u.uShapeStretch.value.set(config.shapeStretchX, config.shapeStretchY);
+            u.uRoundness.value = config.roundness;
+            u.uBaseRotation.value = config.baseRotation;
+            u.uRandomPos.value = config.randomPos;
+            u.uRandomRot.value = config.randomRot;
+            u.uGradientType.value = config.gradientType;
+            u.uGradientPower.value = config.gradientPower;
+            u.uGradientOffset.value = config.gradientOffset;
+            u.uInvert.value = config.invertGradient;
+            u.uMirror.value = config.mirrorGradient;
+            u.uPulseActive.value = config.pulseActive;
+            u.uPulseSpeed.value = config.pulseSpeed;
+            u.uPulseFreq.value = config.pulseFreq;
+            u.uPulseAmp.value = config.pulseAmp;
+            u.uWarp.value = config.warpStrength;
+            u.uNoiseScale.value = config.noiseScale;
+            u.uMinSize.value = config.minSize;
+            u.uMaxSize.value = config.maxSize;
+            u.uSmoothing.value = config.smoothing;
+            u.uAspect.value = config.width / config.height;
+        }
+
+        function resizeCanvas() {
+            renderer.setSize(config.width, config.height);
+            updateUniforms();
+        }
+
+        function saveCanvas() {
+            renderer.render(scene, camera); // Force render
+            const link = document.createElement('a');
+            link.download = `ultra-gradient-${Date.now()}.png`;
+            link.href = renderer.domElement.toDataURL('image/png');
+            link.click();
+        }
+
+        // --- GUI SETUP ---
+        const gui = new GUI({ title: 'CONTROL PANEL', width: 340 });
+        
+        // 1. COLORS
+        const fColor = gui.addFolder('Color & Mood');
+        fColor.addColor(config, 'colorA').name('Start Color').onChange(updateUniforms);
+        fColor.addColor(config, 'colorB').name('End Color').onChange(updateUniforms);
+        fColor.addColor(config, 'bgColor').name('Background').onChange(updateUniforms);
+
+        // 2. GRID
+        const fGrid = gui.addFolder('Grid Topology');
+        fGrid.add(config, 'gridX', 1, 200, 1).name('Columns').onChange(updateUniforms);
+        fGrid.add(config, 'gridY', 1, 200, 1).name('Rows').onChange(updateUniforms);
+        fGrid.add(config, 'warpStrength', 0, 1.0).name('Liquid Warp').onChange(updateUniforms);
+        fGrid.add(config, 'randomPos', 0, 1.0).name('Chaos Jitter').onChange(updateUniforms);
+
+        // 3. SHAPE
+        const fShape = gui.addFolder('Geometry');
+        const shapes = { Circle: 0, Square: 1, Line: 2 };
+        fShape.add(config, 'shapeStart', shapes).name('Inner Shape').onChange(updateUniforms);
+        fShape.add(config, 'shapeEnd', shapes).name('Outer Shape').onChange(updateUniforms);
+        fShape.add(config, 'shapeStretchX', 0.1, 4.0).name('Stretch X').onChange(updateUniforms);
+        fShape.add(config, 'shapeStretchY', 0.1, 4.0).name('Stretch Y').onChange(updateUniforms);
+        fShape.add(config, 'roundness', 0.0, 0.5).name('Corner Radius').onChange(updateUniforms);
+        fShape.add(config, 'baseRotation', 0, 6.28).name('Global Rotate').onChange(updateUniforms);
+        
+        // 4. AUTOMATION (New Feature)
+        const fAuto = gui.addFolder('⚡ Auto-Animate Parameter');
+        // List of interesting parameters to animate
+        const animTargets = ['none', 'baseRotation', 'gradientOffset', 'shapeStretchX', 'warpStrength', 'roundness', 'minSize'];
+        fAuto.add(config, 'autoParam', animTargets).name('Target Param');
+        fAuto.add(config, 'autoSpeed', 0.0, 5.0).name('LFO Speed');
+        fAuto.add(config, 'autoAmp', 0.0, 2.0).name('LFO Depth');
+        
+        const fAdv = gui.addFolder('Advanced / Export');
+        fAdv.add(config, 'gradientType', { Radial: 0, LinearX: 1, LinearY: 2, Noise: 3 }).onChange(updateUniforms);
+        fAdv.add(config, 'pulseActive').name('Pulse Wave').onChange(updateUniforms);
+        fAdv.add(config, 'saveImage').name('Save PNG Snapshot');
+        fAdv.close();
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+            const time = clock.getElapsedTime();
+            
+            // 1. Time Update
+            material.uniforms.uTime.value += dt * config.timeSpeed;
+            
+            // 2. Automation Logic (LFO)
+            if (config.autoParam !== 'none') {
+                const target = config.autoParam;
+                // Simple Sine Wave LFO: Center + sin(time) * amp
+                // We need to fetch current static value as "center" conceptually, 
+                // but for simplicity in this demo, we oscillate around the slider's current position.
+                
+                // Note: direct modulation of config requires care not to lock the UI
+                // We calculate an offset based on time
+                const oscillation = Math.sin(time * config.autoSpeed) * config.autoAmp;
+                
+                // We apply this strictly to the UNIFORM, not the config (so the slider doesn't go crazy)
+                // BUT, to show it working, let's update the Config and the GUI? 
+                // No, updating GUI 60fps is bad performance.
+                // Better approach: Update the specific uniform directly by adding offset.
+                
+                // Let's create a temporary mapped value for the uniform
+                let val = config[target];
+                let finalVal = val + oscillation;
+
+                // Clamping for safety
+                if(target === 'roundness') finalVal = Math.max(0, Math.min(0.5, finalVal));
+                
+                // Update specific uniform based on target string
+                if(target === 'baseRotation') material.uniforms.uBaseRotation.value = finalVal;
+                else if(target === 'gradientOffset') material.uniforms.uGradientOffset.value = finalVal;
+                else if(target === 'shapeStretchX') material.uniforms.uShapeStretch.value.x = Math.max(0.1, finalVal);
+                else if(target === 'warpStrength') material.uniforms.uWarp.value = finalVal;
+                else if(target === 'roundness') material.uniforms.uRoundness.value = finalVal;
+                else if(target === 'minSize') material.uniforms.uMinSize.value = finalVal;
+                
+                // Note: We are NOT calling updateUniforms() here because that re-uploads ALL data.
+                // We are targeting specific values for performance.
+            } else {
+                // If no automation, ensure uniforms match config (in case we just switched off)
+                // We can just rely on the onChange handlers, or force it occasionally.
+            }
+
+            renderer.render(scene, camera);
+        }
+        
+        // Initial call
+        updateUniforms();
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            config.width = window.innerWidth;
+            config.height = window.innerHeight;
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>

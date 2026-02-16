@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Chaos Engine // Strange Attractors</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+        canvas { display: block; }
+        
+        /* Floating Stats */
+        #readout {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            pointer-events: none;
+            user-select: none;
+            z-index: 10;
+        }
+        #readout span { color: #fff; font-weight: bold; }
+
+        /* UI Styling */
+        .lil-gui { 
+            --width: 320px;
+            --background-color: rgba(5, 5, 5, 0.85);
+            --text-color: #a0a0a0;
+            --title-background-color: #222;
+            --widget-color: #333;
+            --hover-color: #444;
+            --focus-color: #555;
+            --number-color: #ff0055;
+            --string-color: #00ffaa;
+        }
+    </style>
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="readout">
+        CHAOS EQUATION: <span id="eq-name">CLIFFORD</span><br>
+        POINTS: <span id="pt-count">2,000,000</span><br>
+        FPS: <span id="fps-counter">60</span>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+        // --- CONFIG ---
+        const config = {
+            // The Variables (The "DNA" of the shape)
+            a: 1.5,
+            b: -1.8,
+            c: 1.6,
+            d: 0.9,
+            
+            // Rendering
+            opacity: 0.15, // Ghostly trail
+            colorA: '#ff0055',
+            colorB: '#00ccff',
+            blendMode: 'Additive',
+            zoom: 1.5,
+            
+            // Animation
+            autoMorph: true,
+            morphSpeed: 0.2,
+            
+            saveImage: () => saveCanvas()
+        };
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        
+        // Orthographic camera for 2D math plotting
+        const aspect = window.innerWidth / window.innerHeight;
+        const frustumSize = 4;
+        const camera = new THREE.OrthographicCamera( 
+            frustumSize * aspect / -2, frustumSize * aspect / 2, 
+            frustumSize / 2, frustumSize / -2, 
+            1, 1000 
+        );
+        camera.position.z = 10;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 1);
+        document.body.appendChild(renderer.domElement);
+
+        // --- THE PARTICLE SYSTEM ---
+        // We use a BufferGeometry to render millions of points
+        const particleCount = 150000; // CPU Iterations per frame (Total visual density is higher due to accumulation)
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        // Material with additive blending for "Glowing" effect
+        const material = new THREE.PointsMaterial({
+            size: 0.015,
+            vertexColors: true,
+            transparent: true,
+            opacity: config.opacity,
+            blending: THREE.AdditiveBlending,
+            depthTest: false
+        });
+
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        // --- ATTRACTOR LOGIC ---
+        // Clifford Attractor Equation:
+        // x(n+1) = sin(a * y) + c * cos(a * x)
+        // y(n+1) = sin(b * x) + d * cos(b * y)
+        
+        let x = 0.1, y = 0.1; // Current "Cursor" position in math space
+
+        function updateAttractor(time) {
+            const posAttr = geometry.attributes.position;
+            const colAttr = geometry.attributes.color;
+            
+            // Parse Colors
+            const c1 = new THREE.Color(config.colorA);
+            const c2 = new THREE.Color(config.colorB);
+            
+            // Slowly mutate parameters if autoMorph is on
+            let a = config.a;
+            let b = config.b;
+            let c = config.c;
+            let d = config.d;
+
+            if (config.autoMorph) {
+                // Sine wave oscillation for parameters creates smooth breathing
+                a += Math.sin(time * 0.5) * 0.05;
+                c += Math.cos(time * 0.3) * 0.05;
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                // 1. Calculate Next Position
+                const xn = Math.sin(a * y) + c * Math.cos(a * x);
+                const yn = Math.sin(b * x) + d * Math.cos(b * y);
+                
+                x = xn;
+                y = yn;
+
+                // 2. Set Vector
+                // We scale it down to fit screen
+                posAttr.setXYZ(i, x * 0.8, y * 0.8, 0);
+
+                // 3. Color Mapping
+                // Map color based on coordinate or velocity to create gradients
+                // Here we map T (mix) to the distance from center
+                const dist = Math.sqrt(x*x + y*y) * 0.5;
+                const mixCol = c1.clone().lerp(c2, dist);
+                
+                colAttr.setXYZ(i, mixCol.r, mixCol.g, mixCol.b);
+            }
+            
+            posAttr.needsUpdate = true;
+            colAttr.needsUpdate = true;
+        }
+
+        // --- TRAIL EFFECTS (PING PONG) ---
+        // To get smooth "Trails" without clearing the screen instantly,
+        // we use a semi-transparent black quad to fade the previous frame.
+        
+        // However, standard "preserveDrawingBuffer" + autoClear=false is easier/faster for this demo.
+        renderer.autoClear = false;
+
+        const fadeMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.1 // How fast trails fade (0.1 = slow fade, 0.9 = fast fade)
+        });
+        const fadePlane = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), fadeMaterial);
+        scene.add(fadePlane);
+
+        // --- GUI ---
+        const gui = new GUI({ title: 'CHAOS ENGINE' });
+        
+        const fEq = gui.addFolder('1. Equation Variables');
+        // These are the "Magic Numbers". Changing them slightly creates entirely new universes.
+        fEq.add(config, 'a', -3.0, 3.0).listen();
+        fEq.add(config, 'b', -3.0, 3.0).listen();
+        fEq.add(config, 'c', -3.0, 3.0).listen();
+        fEq.add(config, 'd', -3.0, 3.0).listen();
+        
+        // Presets
+        const presets = {
+            'Classic': { a: 1.5, b: -1.8, c: 1.6, d: 0.9 },
+            'Golden':  { a: -1.4, b: 1.6, c: 1.0, d: 0.7 },
+            'Ribbon':  { a: 1.9, b: -0.9, c: -1.1, d: 0.9 },
+            'Storm':   { a: -1.7, b: 1.3, c: -0.1, d: -2.1 }
+        };
+        const fPre = gui.addFolder('Presets');
+        for (let key in presets) {
+            fPre.add({ [key]: () => {
+                const p = presets[key];
+                config.a = p.a; config.b = p.b; config.c = p.c; config.d = p.d;
+                // Instant clear on preset change for clean look
+                renderer.clear();
+            }}, key);
+        }
+
+        const fStyle = gui.addFolder('2. Visuals');
+        fStyle.addColor(config, 'colorA');
+        fStyle.addColor(config, 'colorB');
+        fStyle.add(config, 'opacity', 0.01, 1.0).onChange(v => material.opacity = v);
+        fStyle.add(fadeMaterial, 'opacity', 0.0, 0.5).name('Trail Fade Rate');
+
+        const fAnim = gui.addFolder('3. Animation');
+        fAnim.add(config, 'autoMorph').name('Evolve Parameters');
+        fAnim.add(config, 'morphSpeed', 0.0, 1.0);
+        
+        gui.add(config, 'saveImage').name('Save Image');
+
+        // --- LOOP ---
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime() * config.morphSpeed;
+            
+            // 1. Fade previous frame
+            // We draw a black square over everything with low opacity
+            points.visible = false;
+            fadePlane.visible = true;
+            renderer.render(scene, camera);
+            
+            // 2. Draw new chaos points
+            updateAttractor(time);
+            points.visible = true;
+            fadePlane.visible = false;
+            renderer.render(scene, camera);
+            
+            // Update FPS stats (simple)
+            document.getElementById('pt-count').innerText = "150,000 (Accumulated)";
+        }
+        
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.left = -frustumSize * aspect / 2;
+            camera.right = frustumSize * aspect / 2;
+            camera.top = frustumSize / 2;
+            camera.bottom = -frustumSize / 2;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.clear();
+        });
+
+        // Start
+        renderer.clear();
+        animate();
+
+    </script>
+</body>
+</html>
