@@ -3,666 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sylvan Cummings — Generative Art &amp; Creative Tools</title>
+    <title>HTML Files Index</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
         :root {
-            --bg: #0a0a0a;
-            --card-bg: #141414;
-            --card-border: #222;
-            --text: #e5e5e5;
-            --text-secondary: #888;
-            --accent-purple: #7c3aed;
-            --accent-cyan: #06b6d4;
-            --glow: rgba(124, 58, 237, 0.15);
+            --primary-color: #4a6fa5;
+            --secondary-color: #334e68;
+            --accent-color: #829ab1;
+            --background-color: #f7f9fc;
+            --text-color: #334e68;
+            --light-gray: #e6e9ef;
+            --white: #ffffff;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        html { scroll-behavior: smooth; }
-
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: transparent;
-            color: var(--text);
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 0;
+            margin: 0;
         }
-
-        /* ── Hero ── */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+        
+        header {
+            background-color: var(--white);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            text-align: center;
         }
-
-        /* ── Live gradient background ── */
-        #live-bg {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            border: none;
-            pointer-events: none;
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
         }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            text-align: left;
-            padding: 2rem 2rem 2rem clamp(2rem, 6vw, 6rem);
-            width: 100%;
-            will-change: transform;
+        
+        h2 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem;
+            font-size: 1.8rem;
         }
-
-        .hero h1 {
-            font-size: clamp(6rem, 18vw, 16rem);
-            font-weight: 900;
-            letter-spacing: -0.04em;
-            line-height: 0.85;
-            color: transparent;
-            -webkit-text-stroke: 2px rgba(255, 255, 255, 0.7);
-            margin-bottom: 1.5rem;
-            position: relative;
-            text-transform: uppercase;
-        }
-
-        .hero p {
-            font-size: clamp(1rem, 2.5vw, 1.35rem);
-            color: var(--text-secondary);
-            font-weight: 400;
-            max-width: 500px;
-        }
-
-        .scroll-indicator {
-            position: absolute;
-            bottom: 2.5rem;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            animation: bobble 2s ease-in-out infinite;
-        }
-
-        .scroll-indicator .arrow {
-            width: 20px;
-            height: 20px;
-            border-right: 2px solid var(--text-secondary);
-            border-bottom: 2px solid var(--text-secondary);
-            transform: rotate(45deg);
-        }
-
-        @keyframes bobble {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(8px); }
-        }
-
-        /* ── Filter Bar ── */
-        .filter-bar {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 2rem 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .filter-btn {
-            padding: 0.45rem 1rem;
-            border-radius: 100px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(10, 10, 10, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            color: var(--text-secondary);
-            font-family: inherit;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .filter-btn:hover {
-            border-color: #444;
-            color: var(--text);
-        }
-
-        .filter-btn.active {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
-            border-color: transparent;
-            color: #fff;
-        }
-
-        /* ── Grid ── */
-        .grid-section {
-            max-width: 1400px;
+        
+        .container {
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
-
-        .masonry {
-            columns: 3;
-            column-gap: 1.5rem;
+        
+        .description {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
-
-        /* ── Card ── */
-        .card {
-            break-inside: avoid;
-            margin-bottom: 1.5rem;
-            background: rgba(10, 10, 10, 0.55);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.5s ease, translate 0.5s ease;
-            opacity: 0;
-            translate: 0 30px;
+        
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
-
-        .card.visible {
-            opacity: 1;
-            translate: 0 0;
+        
+        .file-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .card.hidden {
-            display: none;
+        
+        .file-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
-
-        .card:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 30px var(--glow);
-            background: rgba(10, 10, 10, 0.7);
-            transform: translateY(-2px);
-        }
-
-        .card-preview {
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            background: rgba(0, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-preview iframe {
-            width: 200%;
-            height: 200%;
-            border: none;
-            transform: scale(0.5);
-            transform-origin: top left;
-            pointer-events: none;
-        }
-
-        .card-body {
-            padding: 1.25rem;
-        }
-
-        .card-category {
-            display: inline-block;
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            padding: 0.2rem 0.6rem;
-            border-radius: 100px;
-            margin-bottom: 0.6rem;
-        }
-
-        .cat-generative { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-        .cat-gradient { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
-        .cat-morph { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
-        .cat-tools { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-        }
-
-        .card-desc {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-
-        .card-link {
-            display: inline-flex;
+        
+        .file-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.4rem;
+            display: flex;
             align-items: center;
-            gap: 0.4rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--accent-cyan);
+            gap: 0.5rem;
+        }
+        
+        .file-card p {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        
+        .file-link {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
             text-decoration: none;
-            transition: color 0.2s ease;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
         }
-
-        .card-link:hover { color: #67e8f9; }
-
-        .card-link .arrow-icon {
-            transition: transform 0.2s ease;
+        
+        .file-link:hover {
+            background-color: var(--secondary-color);
         }
-
-        .card-link:hover .arrow-icon { transform: translateX(3px); }
-
-        /* ── Footer ── */
+        
+        .file-meta {
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
         footer {
             text-align: center;
-            padding: 3rem 2rem;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2rem;
+            background-color: var(--white);
             margin-top: 2rem;
+            color: var(--accent-color);
         }
-
-        /* ── Responsive ── */
-        @media (max-width: 1024px) {
-            .masonry { columns: 2; }
-        }
-
-        @media (max-width: 640px) {
-            .masonry { columns: 1; }
-            .grid-section { padding: 1rem; }
-            .filter-bar { padding: 1.5rem 1rem 0; }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .file-list {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body class="">
-
-    <!-- Live gradient background -->
-    <iframe id="live-bg" src="GradientUltra.html" loading="eager" sandbox="allow-scripts allow-same-origin" title="Background gradient"></iframe>
-
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Sylvan<br>Cummings</h1>
-            <p>Generative art &amp; creative tools</p>
+<body>
+    <header>
+        <h1>HTML Files Index</h1>
+        <p>A collection of HTML documents</p>
+    </header>
+    
+    <div class="container">
+        <section class="description">
+            <h2>About This Collection</h2>
+            <p>Welcome to the HTML Files Index! This is a collection of HTML documents available in this directory. Browse through the available files below.</p>
+        </section>
+        
+        <h2>HTML Files</h2>
+        <div class="file-list">
+            <div class="file-card">
+                <h3>📄 3dgradient.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 20.97 KB • Modified: Jan 14, 2026, 12:38 AM</span>
+                <a href="3dgradient.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 ClaudeMorph.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 19.58 KB • Modified: May 13, 2025, 10:46 PM</span>
+                <a href="ClaudeMorph.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 color-guessing-game.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 3.79 KB • Modified: Sep 12, 2024, 05:00 PM</span>
+                <a href="color-guessing-game.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 GeminiMorph.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 21.91 KB • Modified: May 13, 2025, 11:16 PM</span>
+                <a href="GeminiMorph.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 GradientRandomizer.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 20.08 KB • Modified: Jan 14, 2026, 12:13 AM</span>
+                <a href="GradientRandomizer.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 GradientShapesV2.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 10.39 KB • Modified: Jan 11, 2026, 01:51 PM</span>
+                <a href="GradientShapesV2.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 GradientUltra.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 17.98 KB • Modified: Jan 11, 2026, 01:51 PM</span>
+                <a href="GradientUltra.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 hero-bg.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 8.95 KB • Modified: Feb 16, 2026, 12:13 AM</span>
+                <a href="hero-bg.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 Hexagons.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 11.34 KB • Modified: Mar 22, 2025, 12:34 PM</span>
+                <a href="Hexagons.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 index.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 28.63 KB • Modified: Feb 16, 2026, 12:13 AM</span>
+                <a href="index.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 interactive-display.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 14.46 KB • Modified: Mar 21, 2025, 01:00 PM</span>
+                <a href="interactive-display.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 LiquidTiles.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 13.39 KB • Modified: Jan 11, 2026, 01:51 PM</span>
+                <a href="LiquidTiles.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 Morph.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 15.26 KB • Modified: May 13, 2025, 10:30 PM</span>
+                <a href="Morph.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 PatternStackV2.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 21.69 KB • Modified: Jan 11, 2026, 01:51 PM</span>
+                <a href="PatternStackV2.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 PetriDish.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 14.93 KB • Modified: Jan 13, 2026, 01:38 AM</span>
+                <a href="PetriDish.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 projecttool.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 33.63 KB • Modified: Jan 11, 2026, 01:51 PM</span>
+                <a href="projecttool.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 smoke.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 9.53 KB • Modified: Jan 25, 2026, 07:16 PM</span>
+                <a href="smoke.html" class="file-link">View File</a>
+            </div>
+            <div class="file-card">
+                <h3>📄 VaseGenerator.html</h3>
+                <p>HTML document with web content</p>
+                <span class="file-meta">Size: 7.63 KB • Modified: Jan 11, 2026, 01:59 PM</span>
+                <a href="VaseGenerator.html" class="file-link">View File</a>
+            </div>
         </div>
-        <a href="#projects" class="scroll-indicator">
-            <span>Explore</span>
-            <div class="arrow"></div>
-        </a>
-    </section>
-
-    <!-- Filter Bar -->
-    <div id="projects" class="filter-bar">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="generative">Generative Art</button>
-        <button class="filter-btn" data-filter="gradient">Gradient Machines</button>
-        <button class="filter-btn" data-filter="morph">Morphing Prisms</button>
-        <button class="filter-btn" data-filter="tools">Creative Tools</button>
     </div>
-
-    <!-- Project Grid -->
-    <section class="grid-section">
-        <div class="masonry">
-
-            <!-- Generative Art -->
-            <div class="card visible" data-category="generative" style="transition-delay: 0ms;">
-                <div class="card-preview">
-                    <iframe src="PetriDish.html" loading="lazy" sandbox="allow-scripts" title="Petri Dish preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-generative">Generative Art</span>
-                    <h3 class="card-title">Petri Dish</h3>
-                    <p class="card-desc">A living simulation of cellular colonies growing, competing, and evolving in real time across a digital petri dish.</p>
-                    <a class="card-link" href="/petridish">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="generative" style="transition-delay: 60ms;">
-                <div class="card-preview">
-                    <iframe src="smoke.html" loading="lazy" sandbox="allow-scripts" title="Strange Attractors preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-generative">Generative Art</span>
-                    <h3 class="card-title">Strange Attractors</h3>
-                    <p class="card-desc">Wispy tendrils of smoke swirl and dance through chaotic attractor fields, leaving luminous trails in their wake.</p>
-                    <a class="card-link" href="/smoke">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="generative" style="transition-delay: 120ms;">
-                <div class="card-preview">
-                    <iframe src="Trail.html" loading="lazy" sandbox="allow-scripts" title="Trail preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-generative">Generative Art</span>
-                    <h3 class="card-title">Trail</h3>
-                    <p class="card-desc">Flowing particle trails weave across the canvas, forming organic patterns that shift and merge endlessly.</p>
-                    <a class="card-link" href="/trail">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="generative" style="transition-delay: 180ms;">
-                <div class="card-preview">
-                    <iframe src="interactive-display.html" loading="lazy" sandbox="allow-scripts" title="Particle Universe preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-generative">Generative Art</span>
-                    <h3 class="card-title">Particle Universe</h3>
-                    <p class="card-desc">An interactive particle system where thousands of points attract, repel, and orbit each other in a miniature cosmos.</p>
-                    <a class="card-link" href="/interactive-display">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <!-- Gradient Machines -->
-            <div class="card visible" data-category="gradient" style="transition-delay: 240ms;">
-                <div class="card-preview">
-                    <iframe src="GradientX.html" loading="lazy" sandbox="allow-scripts" title="Gradient X preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">Gradient X</h3>
-                    <p class="card-desc">The flagship gradient engine — multi-layered color fields with real-time controls for blend mode, speed, and complexity.</p>
-                    <a class="card-link" href="/gradientx">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="gradient" style="transition-delay: 300ms;">
-                <div class="card-preview">
-                    <iframe src="GradientUltra.html" loading="lazy" sandbox="allow-scripts" title="Gradient Ultra preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">Gradient Ultra</h3>
-                    <p class="card-desc">High-fidelity gradient compositions with smooth transitions and rich color depth that shift over time.</p>
-                    <a class="card-link" href="/gradientultra">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="gradient" style="transition-delay: 0ms;">
-                <div class="card-preview">
-                    <iframe src="GradientShapes.html" loading="lazy" sandbox="allow-scripts" title="Gradient Shapes preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">Gradient Shapes</h3>
-                    <p class="card-desc">Geometric forms filled with flowing gradients that morph and overlap, creating stained-glass-like compositions.</p>
-                    <a class="card-link" href="/gradientshapes">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="gradient" style="transition-delay: 60ms;">
-                <div class="card-preview">
-                    <iframe src="GradientShapesV2.html" loading="lazy" sandbox="allow-scripts" title="Gradient Shapes V2 preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">Gradient Shapes V2</h3>
-                    <p class="card-desc">An evolved take on gradient shapes with smoother animations, richer palettes, and more complex geometry.</p>
-                    <a class="card-link" href="/gradientshapesv2">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="gradient" style="transition-delay: 120ms;">
-                <div class="card-preview">
-                    <iframe src="GradientRandomizer.html" loading="lazy" sandbox="allow-scripts" title="Gradient Randomizer preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">Gradient Randomizer</h3>
-                    <p class="card-desc">A randomized gradient generator that produces unique color combinations and compositions on every refresh.</p>
-                    <a class="card-link" href="/gradientrandomizer">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="gradient" style="transition-delay: 180ms;">
-                <div class="card-preview">
-                    <iframe src="gradientwtiling.html" loading="lazy" sandbox="allow-scripts" title="Gradient Tiling preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">Gradient Tiling</h3>
-                    <p class="card-desc">Seamless gradient tiles that tessellate across the viewport, creating infinite wallpaper-like patterns.</p>
-                    <a class="card-link" href="/gradientwtiling">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="gradient" style="transition-delay: 240ms;">
-                <div class="card-preview">
-                    <iframe src="3dgradient.html" loading="lazy" sandbox="allow-scripts" title="3D Gradient preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-gradient">Gradient Machines</span>
-                    <h3 class="card-title">3D Gradient</h3>
-                    <p class="card-desc">Gradients projected onto 3D surfaces that rotate and deform, adding dimensionality to color fields.</p>
-                    <a class="card-link" href="/3dgradient">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <!-- Morphing Prisms -->
-            <div class="card visible" data-category="morph" style="transition-delay: 300ms;">
-                <div class="card-preview">
-                    <iframe src="ClaudeMorph.html" loading="lazy" sandbox="allow-scripts" title="Claude Morph preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-morph">Morphing Prisms</span>
-                    <h3 class="card-title">Claude Morph</h3>
-                    <p class="card-desc">Fluid shape-shifting geometry generated by Claude — smooth morphing between organic and crystalline forms.</p>
-                    <a class="card-link" href="/claudemorph">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="morph" style="transition-delay: 0ms;">
-                <div class="card-preview">
-                    <iframe src="GeminiMorph.html" loading="lazy" sandbox="allow-scripts" title="Gemini Morph preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-morph">Morphing Prisms</span>
-                    <h3 class="card-title">Gemini Morph</h3>
-                    <p class="card-desc">Gemini's take on morphing visuals — dual-form geometry that splits, merges, and refracts light.</p>
-                    <a class="card-link" href="/geminimorph">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="morph" style="transition-delay: 60ms;">
-                <div class="card-preview">
-                    <iframe src="Morph.html" loading="lazy" sandbox="allow-scripts" title="Morph preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-morph">Morphing Prisms</span>
-                    <h3 class="card-title">Morph</h3>
-                    <p class="card-desc">The original morph experiment — shapes dissolve and reform in an endless cycle of transformation.</p>
-                    <a class="card-link" href="/morph">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="morph" style="transition-delay: 120ms;">
-                <div class="card-preview">
-                    <iframe src="Prisms.html" loading="lazy" sandbox="allow-scripts" title="Prisms preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-morph">Morphing Prisms</span>
-                    <h3 class="card-title">Prisms</h3>
-                    <p class="card-desc">Light refracts through rotating prismatic shapes, casting rainbow caustics across a dark canvas.</p>
-                    <a class="card-link" href="/prisms">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="morph" style="transition-delay: 180ms;">
-                <div class="card-preview">
-                    <iframe src="Hexagons.html" loading="lazy" sandbox="allow-scripts" title="Hexagons preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-morph">Morphing Prisms</span>
-                    <h3 class="card-title">Hexagons</h3>
-                    <p class="card-desc">A tessellated hexagonal grid that pulses with color — cells ripple outward from interaction points.</p>
-                    <a class="card-link" href="/hexagons">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <!-- Creative Tools -->
-            <div class="card visible" data-category="tools" style="transition-delay: 240ms;">
-                <div class="card-preview">
-                    <iframe src="LiquidTiles.html" loading="lazy" sandbox="allow-scripts" title="Liquid Tiles preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">Liquid Tiles</h3>
-                    <p class="card-desc">A tiling system where each tile behaves like liquid — drag to pour color and watch it flow between cells.</p>
-                    <a class="card-link" href="/liquidtiles">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="tools" style="transition-delay: 300ms;">
-                <div class="card-preview">
-                    <iframe src="PatternStack.html" loading="lazy" sandbox="allow-scripts" title="Pattern Stack preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">Pattern Stack</h3>
-                    <p class="card-desc">Layer multiple pattern generators on top of each other with blend modes to create complex visual textures.</p>
-                    <a class="card-link" href="/patternstack">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="tools" style="transition-delay: 0ms;">
-                <div class="card-preview">
-                    <iframe src="PatternStackV2.html" loading="lazy" sandbox="allow-scripts" title="Pattern Stack V2 preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">Pattern Stack V2</h3>
-                    <p class="card-desc">The next generation of Pattern Stack with more layer types, better controls, and export capabilities.</p>
-                    <a class="card-link" href="/patternstackv2">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="tools" style="transition-delay: 60ms;">
-                <div class="card-preview">
-                    <iframe src="idkyet.html" loading="lazy" sandbox="allow-scripts" title="StencilForge preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">StencilForge</h3>
-                    <p class="card-desc">A stencil-based drawing tool for creating layered cut-out art with precision shapes and masking.</p>
-                    <a class="card-link" href="/idkyet">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="tools" style="transition-delay: 120ms;">
-                <div class="card-preview">
-                    <iframe src="VaseGenerator.html" loading="lazy" sandbox="allow-scripts" title="Vase Generator preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">Vase Generator</h3>
-                    <p class="card-desc">Procedurally generate elegant vase silhouettes by tweaking curves, symmetry, and profile parameters.</p>
-                    <a class="card-link" href="/vasegenerator">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="tools" style="transition-delay: 180ms;">
-                <div class="card-preview">
-                    <iframe src="color-guessing-game.html" loading="lazy" sandbox="allow-scripts" title="Color Guessing Game preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">Color Guessing Game</h3>
-                    <p class="card-desc">Test your color perception — guess the hex code of a randomly generated color and see how close you get.</p>
-                    <a class="card-link" href="/color-guessing-game">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-            <div class="card visible" data-category="tools" style="transition-delay: 240ms;">
-                <div class="card-preview">
-                    <iframe src="projecttool.html" loading="lazy" sandbox="allow-scripts" title="Project Tool preview"></iframe>
-                </div>
-                <div class="card-body">
-                    <span class="card-category cat-tools">Creative Tools</span>
-                    <h3 class="card-title">Project Tool</h3>
-                    <p class="card-desc">A lightweight project planning canvas for sketching out ideas, timelines, and creative workflows.</p>
-                    <a class="card-link" href="/projecttool">Open <span class="arrow-icon">→</span></a>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
+    
     <footer>
-        <p>© 2026 Sylvan Cummings</p>
+        <p>&copy; 2026 HTML Files Index</p>
     </footer>
-
-    <!-- ── Visual Editor ── -->
-    
-
-    
-
-    
-
-    <script>
-        // ── Hide GUI controls in background iframe ──
-        const liveBg = document.getElementById('live-bg');
-        liveBg.addEventListener('load', () => {
-            try {
-                const style = liveBg.contentDocument.createElement('style');
-                style.textContent = '.lil-gui { display: none !important; }';
-                liveBg.contentDocument.head.appendChild(style);
-            } catch (e) { /* cross-origin fallback: no-op */ }
-        });
-
-        // ── Parallax hero text ──
-        const heroContent = document.querySelector('.hero-content');
-        const hero = document.querySelector('.hero');
-
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            const heroH = hero.offsetHeight;
-            if (scrollY > heroH) return;
-            heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
-            heroContent.style.opacity = 1 - (scrollY / heroH) * 1.5;
-        }, { passive: true });
-
-        // ── Scroll-triggered card reveal ──
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-
-        document.querySelectorAll('.card').forEach((card, i) => {
-            card.style.transitionDelay = `${(i % 6) * 60}ms`;
-            observer.observe(card);
-        });
-
-        // ── Category filter ──
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        const allCards = document.querySelectorAll('.card');
-
-        filterBtns.forEach((btn) => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach((b) => b.classList.remove('active'));
-                btn.classList.add('active');
-                const filter = btn.dataset.filter;
-                allCards.forEach((card) => {
-                    if (filter === 'all' || card.dataset.category === filter) {
-                        card.classList.remove('hidden');
-                        requestAnimationFrame(() => {
-                            if (!card.classList.contains('visible')) observer.observe(card);
-                        });
-                    } else {
-                        card.classList.add('hidden');
-                    }
-                });
-            });
-        });
-</script>
-
-
 </body>
 </html>

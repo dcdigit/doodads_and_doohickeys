@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; }
+        body { overflow: hidden; background: #111; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="c"></div>
+    <script type="module">
+        import * as THREE from 'three';
+
+        const container = document.getElementById('c');
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform float uTime;
+            uniform float uAspect;
+            uniform vec2 uGrid;
+            uniform vec3 uColorA;
+            uniform vec3 uColorB;
+            uniform vec3 uBgColor;
+            uniform int uShapeStart;
+            uniform int uShapeEnd;
+            uniform vec2 uShapeStretch;
+            uniform float uRoundness;
+            uniform float uBaseRotation;
+            uniform float uRandomPos;
+            uniform float uRandomRot;
+            uniform int uGradientType;
+            uniform float uGradientPower;
+            uniform float uGradientOffset;
+            uniform bool uInvert;
+            uniform bool uMirror;
+            uniform bool uPulseActive;
+            uniform float uPulseSpeed;
+            uniform float uPulseFreq;
+            uniform float uPulseAmp;
+            uniform float uWarp;
+            uniform float uNoiseScale;
+            uniform float uMinSize;
+            uniform float uMaxSize;
+            uniform float uSmoothing;
+            varying vec2 vUv;
+
+            float random(vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+            float snoise(vec2 v) {
+                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                vec2 i = floor(v + dot(v, C.yy));
+                vec2 x0 = v - i + dot(i, C.xx);
+                vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                vec4 x12 = x0.xyxy + C.xxzz;
+                x12.xy -= i1;
+                i = mod289(i);
+                vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                m = m*m; m = m*m;
+                vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                vec3 h = abs(x) - 0.5;
+                vec3 ox = floor(x + 0.5);
+                vec3 a0 = x - ox;
+                m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+                vec3 g;
+                g.x = a0.x * x0.x + h.x * x0.y;
+                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                return 130.0 * dot(m, g);
+            }
+            vec2 rotate(vec2 v, float a) {
+                float s = sin(a); float c = cos(a);
+                return mat2(c, -s, s, c) * v;
+            }
+            float sdBox(vec2 p, vec2 b, float r) {
+                vec2 d = abs(p) - b + r;
+                return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+            }
+            float getShapeDist(int type, vec2 p, float size) {
+                vec2 pStr = p / uShapeStretch;
+                if (type == 0) { return length(pStr) - size; }
+                else if (type == 1) { return sdBox(pStr, vec2(size), uRoundness * size); }
+                else { return sdBox(pStr, vec2(0.5, size), uRoundness * size); }
+            }
+
+            void main() {
+                vec2 st = vUv;
+                float n = snoise(vec2(st.x, st.y + uTime*0.1) * uNoiseScale);
+                st += vec2(n) * uWarp;
+                vec2 gridSt = st * uGrid;
+                vec2 cellId = floor(gridSt);
+                vec2 randOffset = vec2(random(cellId) - 0.5, random(cellId + 100.0) - 0.5) * uRandomPos;
+                vec2 cellUv = fract(gridSt) - 0.5 - randOffset;
+                vec2 normId = (cellId + 0.5) / uGrid;
+                float influence = 0.0;
+                if (uGradientType == 0) {
+                    vec2 ac = (normId - 0.5); ac.x *= uAspect;
+                    influence = length(ac) * 2.0;
+                } else if (uGradientType == 1) {
+                    influence = normId.x;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else if (uGradientType == 2) {
+                    influence = normId.y;
+                    if (uMirror) influence = abs(influence - 0.5) * 2.0;
+                } else {
+                    influence = snoise(normId * uNoiseScale + uTime * 0.1) * 0.5 + 0.5;
+                }
+                influence += uGradientOffset;
+                if (uInvert) influence = 1.0 - influence;
+                if (uPulseActive) {
+                    vec2 cv = (normId - 0.5); cv.x *= uAspect;
+                    float dist = length(cv);
+                    float wave = sin(dist * uPulseFreq - uTime * uPulseSpeed);
+                    influence += wave * uPulseAmp;
+                }
+                influence = clamp(influence, 0.0, 1.0);
+                influence = pow(influence, uGradientPower);
+                float currentSize = mix(uMaxSize, uMinSize, influence);
+                float r = currentSize * 0.5;
+                float cellRot = uBaseRotation;
+                cellRot += (random(cellId) - 0.5) * uRandomRot * 6.28;
+                vec2 rotatedUv = rotate(cellUv, cellRot);
+                float d1 = getShapeDist(uShapeStart, rotatedUv, r);
+                float d2 = getShapeDist(uShapeEnd, rotatedUv, r);
+                float dFinal = mix(d1, d2, influence);
+                float alpha = 1.0 - smoothstep(0.0, uSmoothing, dFinal);
+                vec3 c = mix(uColorA, uColorB, influence);
+                vec3 finalColor = mix(uBgColor, c, alpha);
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+
+        // Settings matched from screenshot
+        const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+                uTime:        { value: 0 },
+                uAspect:      { value: window.innerWidth / window.innerHeight },
+                uGrid:        { value: new THREE.Vector2(126, 123) },
+                uColorA:      { value: new THREE.Color('#ff3366') },
+                uColorB:      { value: new THREE.Color('#0088ff') },
+                uBgColor:     { value: new THREE.Color('#111111') },
+                uShapeStart:  { value: 0 },  // Circle
+                uShapeEnd:    { value: 1 },  // Square
+                uShapeStretch:{ value: new THREE.Vector2(1.0, 1.0) },
+                uRoundness:   { value: 0.012 },
+                uBaseRotation:{ value: 0 },
+                uRandomPos:   { value: 0.242 },
+                uRandomRot:   { value: 0.351 },
+                uGradientType:{ value: 3 },  // Noise
+                uGradientPower:{ value: 1.0 },
+                uGradientOffset:{ value: 0 },
+                uInvert:      { value: false },
+                uMirror:      { value: false },
+                uPulseActive: { value: true },
+                uPulseSpeed:  { value: 1.0 },
+                uPulseFreq:   { value: 15.789 },
+                uPulseAmp:    { value: 0.343 },
+                uWarp:        { value: 0.032 },
+                uNoiseScale:  { value: 2.0 },
+                uMinSize:     { value: 0.1 },
+                uMaxSize:     { value: 0.8 },
+                uSmoothing:   { value: 0.02 }
+            }
+        });
+
+        const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(quad);
+
+        const timeSpeed = 0.2;
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            material.uniforms.uTime.value += clock.getDelta() * timeSpeed;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+        });
+    </script>
+</body>
+</html>
