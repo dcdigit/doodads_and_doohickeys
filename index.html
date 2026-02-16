@@ -730,11 +730,14 @@
             background: #1a1a1a;
             color: var(--text);
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #editor-toggle.editor-unlocked {
+            display: flex;
         }
         #editor-toggle:hover {
             background: #252525;
@@ -1017,6 +1020,20 @@
             const gridSection = document.querySelector('.grid-section');
 
             let isOpen = false;
+            let unlocked = false;
+
+            // Press Shift+E to unlock the editor (hidden from public)
+            document.addEventListener('keydown', (e) => {
+                if (e.shiftKey && e.key === 'E' && !e.ctrlKey && !e.metaKey) {
+                    if (!unlocked) {
+                        unlocked = true;
+                        toggle.classList.add('editor-unlocked');
+                    } else {
+                        // Toggle open/close once unlocked
+                        isOpen ? closeEditor() : openEditor();
+                    }
+                }
+            });
 
             function openEditor() {
                 isOpen = true;
