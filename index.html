@@ -3,276 +3,896 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Files Index</title>
+    <title>Sylvan Cummings — Creative Technologist & Industrial Designer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <style>
+
         :root {
-            --primary-color: #4a6fa5;
-            --secondary-color: #334e68;
-            --accent-color: #829ab1;
-            --background-color: #f7f9fc;
-            --text-color: #334e68;
-            --light-gray: #e6e9ef;
-            --white: #ffffff;
+            --text: #e5e5e5;
+            --text-secondary: #888;
+            --accent-purple: #7c3aed;
+            --accent-cyan: #06b6d4;
+            --glow: rgba(124, 58, 237, 0.15);
         }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            padding: 0;
-            margin: 0;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        header {
-            background-color: var(--white);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 1.5rem;
-            text-align: center;
+
+        /* ── Live gradient background ── */
+        #live-bg {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
         }
-        
-        h1 {
-            color: var(--primary-color);
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        h2 {
-            color: var(--secondary-color);
-            margin: 1.5rem 0 1rem;
-            font-size: 1.8rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        .description {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background-color: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-        
-        .file-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-        
-        .file-card {
-            background-color: var(--white);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .file-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .file-card h3 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.4rem;
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: left;
+            padding: 2rem 2rem 2rem clamp(2rem, 6vw, 6rem);
+            width: 100%;
+            will-change: transform;
+        }
+
+        .hero-title {
+            display: block;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            overflow: visible;
+            cursor: default;
+        }
+
+        .hero-title text {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            fill: white;
+            filter: url(#glass);
+        }
+
+        .hero-nav {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0;
+            font-size: clamp(1.1rem, 3vw, 1.8rem);
+            font-weight: 300;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-nav .nav-item {
+            background: none;
+            border: none;
+            font: inherit;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.1em 0;
+            position: relative;
+            transition: color 0.3s ease;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+        }
+
+        .hero-nav .nav-item:hover {
+            color: var(--text);
+        }
+
+        .hero-nav .nav-item.active {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .hero-nav .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #fff;
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .hero-nav .nav-item.active::after {
+            width: 100%;
+        }
+
+        .hero-nav .slash {
+            color: rgba(255, 255, 255, 0.2);
+            margin: 0 0.4em;
+            font-weight: 200;
+            user-select: none;
+        }
+
+        .hero-intro {
+            margin-top: 1.5rem;
+            font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+            color: #bbb;
+            font-weight: 400;
+            max-width: 38em;
+            line-height: 1.6;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+        }
+
+        .tech-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 1rem;
+        }
+
+        .tech-pill {
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            padding: 0.3em 0.75em;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2.5rem;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 0.5rem;
-        }
-        
-        .file-card p {
-            color: var(--text-color);
-            margin-bottom: 1rem;
-        }
-        
-        .file-link {
-            display: inline-block;
-            background-color: var(--primary-color);
-            color: var(--white);
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
             text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.3s ease;
+            animation: bobble 2s ease-in-out infinite;
         }
-        
-        .file-link:hover {
-            background-color: var(--secondary-color);
+
+        .scroll-indicator .arrow {
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid var(--text-secondary);
+            border-bottom: 2px solid var(--text-secondary);
+            transform: rotate(45deg);
         }
-        
-        .file-meta {
-            font-size: 0.85rem;
-            color: var(--accent-color);
-            margin-bottom: 1rem;
+
+        @keyframes bobble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+
+        /* ── Grid ── */
+        .grid-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 3rem;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* ── Card ── */
+        .card {
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(10, 10, 10, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            text-decoration: none;
+            color: var(--text);
+            opacity: 0;
+            translate: 0 40px;
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                        translate 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.3s ease,
+                        box-shadow 0.3s ease;
+        }
+
+        /* Featured cards span 2 of 3 columns */
+        .card.featured {
+            grid-column: span 2;
+        }
+
+        /* Alternate featured cards to the right side */
+        .card.featured-right {
+            grid-column: 2 / 4;
+        }
+
+        .card.featured .card-img-wrap {
+            aspect-ratio: 16 / 9;
+        }
+
+        .card.featured .card-body {
+            padding: 1.6rem 2rem 1.8rem;
+        }
+
+        .card.featured .card-title {
+            font-size: 1.5rem;
+        }
+
+        .card.featured .card-desc {
+            font-size: 1rem;
+        }
+
+        .card.visible {
+            opacity: 1;
+            translate: 0 0;
+        }
+
+        .card.hidden { display: none; }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 8px 40px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ── Card image ── */
+        .card-img-wrap {
+            position: relative;
+            aspect-ratio: 16 / 10;
+            overflow: hidden;
+            background: #0a0a0a;
+        }
+
+        /* Dark vignette overlay — tames white-background thumbnails */
+        .card-img-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(10,10,10,0.6) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Stronger treatment for known light-bg thumbnails */
+        .card[data-theme="light"] .card-img-wrap::after {
+            background:
+                radial-gradient(ellipse at center, transparent 20%, rgba(10,10,10,0.7) 100%),
+                linear-gradient(to bottom, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.4) 100%);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
+        .card:hover .card-img {
+            transform: scale(1.04);
+        }
+
+        /* ── Card body ── */
+        .card-body {
+            padding: 1.4rem 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: #aaa;
+            line-height: 1.55;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            margin-top: 0.25rem;
+            transition: gap 0.2s ease;
+        }
+
+        .card:hover .card-link { gap: 0.6rem; }
+
+        .card-link svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Footer ── */
         footer {
             text-align: center;
-            padding: 2rem;
-            background-color: var(--white);
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
             margin-top: 2rem;
-            color: var(--accent-color);
         }
-        
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+            font-weight: 400;
+        }
+
+        .footer-links a:hover { color: var(--text); }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
             }
-            
-            h2 {
-                font-size: 1.5rem;
+            .card.featured,
+            .card.featured-right {
+                grid-column: 1 / -1;
             }
-            
-            .container {
-                padding: 1rem;
-            }
-            
-            .file-list {
+        }
+
+        @media (max-width: 640px) {
+            .gallery {
                 grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            .grid-section { padding: 1rem; }
+            .card.featured .card-img-wrap {
+                aspect-ratio: 16 / 10;
+            }
+            .card.featured .card-title {
+                font-size: 1.25rem;
+            }
+            .card.featured .card-desc {
+                font-size: 0.95rem;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>HTML Files Index</h1>
-        <p>A collection of HTML documents</p>
-    </header>
-    
-    <div class="container">
-        <section class="description">
-            <h2>About This Collection</h2>
-            <p>Welcome to the HTML Files Index! This is a collection of HTML documents available in this directory. Browse through the available files below.</p>
-        </section>
-        
-        <h2>HTML Files</h2>
-        <div class="file-list">
-            <div class="file-card">
-                <h3>📄 3dgradient.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 20.97 KB • Modified: Jan 14, 2026, 12:38 AM</span>
-                <a href="3dgradient.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 ClaudeMorph.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 19.58 KB • Modified: May 13, 2025, 10:46 PM</span>
-                <a href="ClaudeMorph.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 color-guessing-game.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 3.79 KB • Modified: Sep 12, 2024, 05:00 PM</span>
-                <a href="color-guessing-game.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GeminiMorph.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 21.91 KB • Modified: May 13, 2025, 11:16 PM</span>
-                <a href="GeminiMorph.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientRandomizer.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 20.08 KB • Modified: Jan 14, 2026, 12:13 AM</span>
-                <a href="GradientRandomizer.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientShapesV2.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 10.39 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="GradientShapesV2.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 GradientUltra.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 17.98 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="GradientUltra.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 hero-bg.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 8.95 KB • Modified: Feb 16, 2026, 12:13 AM</span>
-                <a href="hero-bg.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 Hexagons.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 11.34 KB • Modified: Mar 22, 2025, 12:34 PM</span>
-                <a href="Hexagons.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 index.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 28.63 KB • Modified: Feb 16, 2026, 12:13 AM</span>
-                <a href="index.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 interactive-display.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 14.46 KB • Modified: Mar 21, 2025, 01:00 PM</span>
-                <a href="interactive-display.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 LiquidTiles.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 13.39 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="LiquidTiles.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 Morph.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 15.26 KB • Modified: May 13, 2025, 10:30 PM</span>
-                <a href="Morph.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 PatternStackV2.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 21.69 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="PatternStackV2.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 PetriDish.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 14.93 KB • Modified: Jan 13, 2026, 01:38 AM</span>
-                <a href="PetriDish.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 projecttool.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 33.63 KB • Modified: Jan 11, 2026, 01:51 PM</span>
-                <a href="projecttool.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 smoke.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 9.53 KB • Modified: Jan 25, 2026, 07:16 PM</span>
-                <a href="smoke.html" class="file-link">View File</a>
-            </div>
-            <div class="file-card">
-                <h3>📄 VaseGenerator.html</h3>
-                <p>HTML document with web content</p>
-                <span class="file-meta">Size: 7.63 KB • Modified: Jan 11, 2026, 01:59 PM</span>
-                <a href="VaseGenerator.html" class="file-link">View File</a>
+
+    <!-- Live gradient background — raw WebGL, no Three.js -->
+    <canvas id="live-bg"></canvas>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <svg class="hero-title" id="heroSvg" viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" aria-label="Sylvan Cummings">
+                <defs>
+                    <filter id="glass" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+                        <!-- Cursor-reactive turbulence distortion -->
+                        <feTurbulence id="jellyNoise" type="turbulence" baseFrequency="0.012 0.010" numOctaves="2" seed="3" result="noise"/>
+                        <feDisplacementMap id="jellyDisplace" in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warped"/>
+                        <feDisplacementMap in="SourceAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
+
+                        <feMorphology in="warpedAlpha" operator="dilate" radius="1" result="fat"/>
+                        <feGaussianBlur in="fat" stdDeviation="2.5" result="rounded"/>
+                        <feComponentTransfer in="rounded" result="mask">
+                            <feFuncA type="table" tableValues="0 0 0 0 0 1 1 1 1"/>
+                        </feComponentTransfer>
+                        <feFlood flood-color="white" flood-opacity="0.11" result="tint"/>
+                        <feComposite in="tint" in2="mask" operator="in" result="body"/>
+                        <feGaussianBlur in="mask" stdDeviation="1.5" result="edgeMap"/>
+                        <feSpecularLighting in="edgeMap" surfaceScale="2" specularConstant="0.8" specularExponent="50" result="highlight">
+                            <fePointLight x="-150" y="-150" z="400"/>
+                        </feSpecularLighting>
+                        <feComposite in="highlight" in2="mask" operator="in" result="hlMasked"/>
+                        <feComponentTransfer in="hlMasked" result="hlFaded">
+                            <feFuncA type="linear" slope="0.5" intercept="0"/>
+                        </feComponentTransfer>
+                        <feSpecularLighting in="edgeMap" surfaceScale="1.5" specularConstant="0.4" specularExponent="40" result="shadow">
+                            <fePointLight x="600" y="500" z="200"/>
+                        </feSpecularLighting>
+                        <feComposite in="shadow" in2="mask" operator="in" result="shMasked"/>
+                        <feComponentTransfer in="shMasked" result="shFaded">
+                            <feFuncA type="linear" slope="0.3" intercept="0"/>
+                        </feComponentTransfer>
+                        <feImage href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='white' stop-opacity='.17'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='.07'/%3E%3C/linearGradient%3E%3Crect fill='url(%23g)' width='1' height='1'/%3E%3C/svg%3E" preserveAspectRatio="none" result="grad"/>
+                        <feComposite in="grad" in2="mask" operator="in" result="gradMasked"/>
+                        <feMerge>
+                            <feMergeNode in="body"/>
+                            <feMergeNode in="gradMasked"/>
+                            <feMergeNode in="shFaded"/>
+                            <feMergeNode in="hlFaded"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <text x="0" y="120" font-size="148" letter-spacing="-6">SYLVAN</text>
+                <text x="0" y="260" font-size="148" letter-spacing="-6">CUMMINGS</text>
+            </svg>
+            <nav class="hero-nav">
+                <button class="nav-item" data-filter="generative">Generative Art</button>
+                <span class="slash">/</span>
+                <button class="nav-item" data-filter="tools">Creative Tools</button>
+                <span class="slash">/</span>
+                <button class="nav-item" data-filter="physical">Physical Design</button>
+            </nav>
+            <p class="hero-intro">Creative technologist and industrial designer building generative art, interactive tools, and physical products.</p>
+            <div class="tech-pills">
+                <span class="tech-pill">WebGL</span>
+                <span class="tech-pill">GLSL</span>
+                <span class="tech-pill">Three.js</span>
+                <span class="tech-pill">JavaScript</span>
+                <span class="tech-pill">React Native</span>
+                <span class="tech-pill">SolidWorks</span>
+                <span class="tech-pill">Ceramics</span>
             </div>
         </div>
-    </div>
-    
+        <a href="#projects" class="scroll-indicator">
+            <span>Explore</span>
+            <div class="arrow"></div>
+        </a>
+    </section>
+
+    <div id="projects"></div>
+
+    <!-- Project Grid -->
+    <section class="grid-section">
+        <div class="gallery">
+
+            <!-- Row 1: Featured left + small right -->
+            <a href="smoke.html" class="card featured" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/smoke.webp" alt="Strange Attractors" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Strange Attractors</h3>
+                    <p class="card-desc">Real-time chaotic attractor visualization with luminous particle trails. WebGL, custom GLSL shaders.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="PetriDish.html" class="card" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/PetriDish.webp" alt="Petri Dish" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Petri Dish</h3>
+                    <p class="card-desc">Reaction-diffusion simulation with interactive brush painting. Configurable feed/kill rates, presets, and image export.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <!-- Row 2: Small left + featured right -->
+            <a href="GradientUltra.html" class="card" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/GradientUltra.webp" alt="Gradient Ultra" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Gradient Ultra</h3>
+                    <p class="card-desc">Full-control GLSL shape-gradient engine — grid topology, morphing geometry, noise warping, pulse animation, and image export.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="interactive-display.html" class="card featured featured-right" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/interactive-display.webp" alt="Particle Universe" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Particle Universe</h3>
+                    <p class="card-desc">Interactive n-body particle system with attraction, repulsion, and orbit mechanics. Mouse-driven force fields, multiple color themes.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <!-- Row 3: Three small -->
+            <a href="Hexagons.html" class="card" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/Hexagons.webp" alt="Hexagons" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Hexagons</h3>
+                    <p class="card-desc">Tessellated hexagonal grid with ripple propagation from interaction points. Canvas 2D rendering.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="ClaudeMorph.html" class="card" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/ClaudeMorph.webp" alt="Claude Morph" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Claude Morph</h3>
+                    <p class="card-desc">Smooth morphing between organic and crystalline 3D geometry. Three.js with procedural mesh generation.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="3dgradient.html" class="card" data-category="generative">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/3dgradient.webp" alt="3D Gradient" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">3D Gradient</h3>
+                    <p class="card-desc">Gradients mapped onto deforming 3D surfaces. Three.js with custom vertex shaders and orbit controls.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <!-- Row 4: Featured left + small right -->
+            <a href="LiquidTiles.html" class="card featured" data-category="tools">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/LiquidTiles.webp" alt="Liquid Tiles" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Liquid Tiles</h3>
+                    <p class="card-desc">Metaball-style tile generator with SVG goo filter. Adjustable grid, geometry, melt radius, and tile export.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="PatternStackV2.html" class="card" data-category="tools">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/PatternStackV2.webp" alt="Pattern Stack" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Pattern Stack</h3>
+                    <p class="card-desc">Layered isometric pattern generator with blend modes. Stack multiple pattern layers and export composites.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <!-- Row 5: Small left + featured right -->
+            <a href="color-guessing-game.html" class="card" data-category="tools" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/color-guessing-game.webp" alt="Color Guessing Game" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Color Guessing Game</h3>
+                    <p class="card-desc">Color perception trainer — identify the odd shade from an increasingly difficult grid of similar hues.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <div class="card featured featured-right" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/covechair.webp" alt="Cove Lounge Chair" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Cove Lounge Chair</h3>
+                    <p class="card-desc">Work-from-home lounge chair. Triangular bent plywood base, dual armrest surfaces. Collaborative project — SolidWorks, physical prototyping.</p>
+                </div>
+            </div>
+
+            <!-- Row 6: Featured left + small right -->
+            <div class="card featured" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/prism.webp" alt="Prism Electric Truck" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Prism Electric Truck</h3>
+                    <p class="card-desc">Battery-electric Class 7-8 commercial vehicle concept. Hexagonal-prism cabin, chassis-integrated battery packs. SolidWorks, KeyShot rendering.</p>
+                </div>
+            </div>
+
+            <div class="card" data-category="physical">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/stoolhero.webp" alt="Geometric Stool" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Geometric Stool</h3>
+                    <p class="card-desc">Oak seat on sculptural black steel base. Intersecting planes for structural rigidity. CNC milling, welding, hand finishing.</p>
+                </div>
+            </div>
+
+            <!-- Row 7: Small left + featured right -->
+            <a href="VaseGenerator.html" class="card" data-category="tools">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/VaseGenerator.webp" alt="Vase Generator" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Vase Generator</h3>
+                    <p class="card-desc">Parametric 3D vase modeler with adjustable curvature, line count, and shell opacity. Three.js with auto-rotation.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <div class="card featured featured-right" data-category="physical">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/wastechair.webp" alt="Waste Chair" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Waste Chair</h3>
+                    <p class="card-desc">Chair built entirely from discarded materials — woven inner tubes on welded scrap-metal frame. MIG welding, material reclamation.</p>
+                </div>
+            </div>
+
+            <!-- Row 8: Three small -->
+            <div class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/gridswitch.webp" alt="Grid Switch" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Grid Switch</h3>
+                    <p class="card-desc">Reimagined light switch — 3x3 grid of tactile rocker tiles replacing the standard toggle. SolidWorks, injection mold design.</p>
+                </div>
+            </div>
+
+            <div class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/bowlblue.webp" alt="Reactive Glaze Bowl" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Reactive Glaze Bowl</h3>
+                    <p class="card-desc">Wheel-thrown ceramic with reactive blue glaze. Unpredictable pooling and breaking patterns from high-fire reduction.</p>
+                </div>
+            </div>
+
+            <div class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/mechanism.webp" alt="Sunrise Mechanism" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Sunrise Mechanism</h3>
+                    <p class="card-desc">Lamp adjustment mechanism with ball joint and threaded rod. Designed for injection molding. SolidWorks, GD&T tolerancing.</p>
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+
     <footer>
-        <p>&copy; 2026 HTML Files Index</p>
+        <div class="footer-links">
+            <a href="https://github.com/sylvan-cu" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://www.linkedin.com/in/sylvan-cummings-a2a645247" target="_blank" rel="noopener">LinkedIn</a>
+            <a href="mailto:sylvancummings@gmail.com">Email</a>
+        </div>
+        <p>&copy; 2026 Sylvan Cummings</p>
     </footer>
+
+    <script>
+        // ═══════════════════════════════════════════════════
+        // WebGL background with scroll-based opacity fade
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const canvas = document.getElementById('live-bg');
+            const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false });
+            if (!gl) { canvas.style.background = '#111'; return; }
+
+            const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+            function resize() {
+                canvas.width = window.innerWidth * dpr;
+                canvas.height = window.innerHeight * dpr;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            resize();
+
+            // Enable blending for alpha
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+            const vs = `attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0,1);}`;
+            const fs = `precision mediump float;
+uniform float uTime,uAspect,uAlpha;
+varying vec2 vUv;
+float random(vec2 st){return fract(sin(dot(st,vec2(12.9898,78.233)))*43758.5453);}
+vec3 mod289v3(vec3 x){return x-floor(x*(1./289.))*289.;}
+vec2 mod289v2(vec2 x){return x-floor(x*(1./289.))*289.;}
+vec3 permute(vec3 x){return mod289v3(((x*34.)+1.)*x);}
+float snoise(vec2 v){
+    const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);
+    vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);
+    vec2 i1=(x0.x>x0.y)?vec2(1,0):vec2(0,1);
+    vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod289v2(i);
+    vec3 p=permute(permute(i.y+vec3(0,i1.y,1))+i.x+vec3(0,i1.x,1));
+    vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);
+    m=m*m;m=m*m;
+    vec3 x=2.*fract(p*C.www)-1.;vec3 h=abs(x)-.5;
+    vec3 ox=floor(x+.5);vec3 a0=x-ox;
+    m*=1.79284291400159-.85373472095314*(a0*a0+h*h);
+    vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+    return 130.*dot(m,g);
+}
+vec2 rotate(vec2 v,float a){float s=sin(a),c=cos(a);return mat2(c,-s,s,c)*v;}
+float sdBox(vec2 p,vec2 b,float r){vec2 d=abs(p)-b+r;return length(max(d,0.))+min(max(d.x,d.y),0.)-r;}
+void main(){
+    vec2 st=vUv;
+    float n=snoise(vec2(st.x,st.y+uTime*.1)*2.);
+    st+=vec2(n)*.032;
+    vec2 grid=vec2(126,123);
+    vec2 gridSt=st*grid;vec2 cellId=floor(gridSt);
+    vec2 randOff=vec2(random(cellId)-.5,random(cellId+100.)-.5)*.242;
+    vec2 cellUv=fract(gridSt)-.5-randOff;
+    vec2 normId=(cellId+.5)/grid;
+    float influence=snoise(normId*2.+uTime*.1)*.5+.5;
+    vec2 cv=(normId-.5);cv.x*=uAspect;
+    float dist=length(cv);
+    float wave=sin(dist*15.789-uTime);
+    influence+=wave*.343;
+    influence=clamp(influence,0.,1.);
+    float sz=mix(.8,.1,influence)*.5;
+    float cellRot=(random(cellId)-.5)*.351*6.28;
+    vec2 rUv=rotate(cellUv,cellRot);
+    float d1=length(rUv)-sz;
+    float d2=sdBox(rUv,vec2(sz),.012*sz);
+    float dF=mix(d1,d2,influence);
+    float alpha=1.-smoothstep(0.,.02,dF);
+    vec3 colA=vec3(1.,.2,.4);vec3 colB=vec3(0.,.533,1.);
+    vec3 c=mix(colA,colB,influence);
+    vec3 bg=vec3(.039);
+    vec3 col=mix(bg,c,alpha);
+    gl_FragColor=vec4(col,uAlpha);
+}`;
+
+            function compile(type, src) {
+                const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s;
+            }
+            const prog = gl.createProgram();
+            gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+            gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+            gl.linkProgram(prog); gl.useProgram(prog);
+
+            const buf = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+            const pLoc = gl.getAttribLocation(prog, 'p');
+            gl.enableVertexAttribArray(pLoc);
+            gl.vertexAttribPointer(pLoc, 2, gl.FLOAT, false, 0, 0);
+
+            const uTime = gl.getUniformLocation(prog, 'uTime');
+            const uAspect = gl.getUniformLocation(prog, 'uAspect');
+            const uAlpha = gl.getUniformLocation(prog, 'uAlpha');
+            gl.uniform1f(uAspect, window.innerWidth / window.innerHeight);
+            gl.uniform1f(uAlpha, 1.0);
+
+            let time = 0, last = 0, scrollAlpha = 1.0;
+
+            // Scroll fade — gradient fades as you scroll past the hero
+            const hero = document.querySelector('.hero');
+            window.addEventListener('scroll', () => {
+                const heroH = hero.offsetHeight;
+                const progress = Math.min(window.scrollY / (heroH * 0.6), 1);
+                scrollAlpha = 1.0 - progress * 0.85; // fades to 0.15
+            }, { passive: true });
+
+            function frame(now) {
+                requestAnimationFrame(frame);
+                const dt = Math.min((now - last) / 1000, 0.05);
+                last = now; time += dt * 0.2;
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.uniform1f(uTime, time);
+                gl.uniform1f(uAlpha, scrollAlpha);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            }
+            requestAnimationFrame(frame);
+
+            window.addEventListener('resize', () => {
+                resize();
+                gl.uniform1f(uAspect, window.innerWidth / window.innerHeight);
+            });
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Jelly text — cursor-reactive shape distortion
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const svg = document.getElementById('heroSvg');
+            const noise = document.getElementById('jellyNoise');
+            const displace = document.getElementById('jellyDisplace');
+            const displace2 = displace ? displace.nextElementSibling : null; // alpha displacement
+            if (!svg || !noise || !displace) return;
+
+            // Track mouse proximity to the SVG text area
+            let proximity = 0;       // 0 = far away, 1 = right on the text
+            let currentScale = 3;    // current displacement scale (resting)
+            let targetScale = 3;     // target displacement scale
+            let freqPhase = 0;       // animated frequency phase
+
+            const svgPt = svg.createSVGPoint();
+            function toSVG(cx, cy) {
+                svgPt.x = cx; svgPt.y = cy;
+                try { return svgPt.matrixTransform(svg.getScreenCTM().inverse()); }
+                catch(e) { return { x: -9999, y: -9999 }; }
+            }
+
+            document.addEventListener('mousemove', (e) => {
+                const p = toSVG(e.clientX, e.clientY);
+                // Text occupies roughly x:0-850, y:40-280 in SVG coords
+                const cx = Math.max(0, Math.min(1, (p.x - 0) / 850));
+                const cy = Math.max(0, Math.min(1, (p.y - 40) / 240));
+                // Distance from text bounds (0 = inside, grows outside)
+                const inside = (p.x > -50 && p.x < 900 && p.y > 0 && p.y < 320);
+                if (inside) {
+                    proximity = 1;
+                } else {
+                    const dx = p.x < -50 ? -50 - p.x : (p.x > 900 ? p.x - 900 : 0);
+                    const dy = p.y < 0 ? -p.y : (p.y > 320 ? p.y - 320 : 0);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    proximity = Math.max(0, 1 - dist / 200);
+                }
+            });
+
+            document.addEventListener('mouseleave', () => { proximity = 0; });
+
+            // Animate at ~30fps for performance
+            setInterval(() => {
+                // Target scale: 3 at rest, up to 16 when cursor is on the text
+                targetScale = 3 + proximity * 13;
+
+                // Smooth interpolation toward target
+                currentScale += (targetScale - currentScale) * 0.15;
+
+                // Animate turbulence frequency for ripple motion
+                freqPhase += 0.02 * (0.3 + proximity * 0.7);
+                const bx = 0.012 + Math.sin(freqPhase) * 0.004 * proximity;
+                const by = 0.010 + Math.cos(freqPhase * 0.7) * 0.003 * proximity;
+
+                const s = currentScale.toFixed(1);
+                displace.setAttribute('scale', s);
+                if (displace2) displace2.setAttribute('scale', s);
+                noise.setAttribute('baseFrequency', `${bx.toFixed(5)} ${by.toFixed(5)}`);
+            }, 33);
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Parallax + card reveal + category filter
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const heroContent = document.querySelector('.hero-content');
+            const hero = document.querySelector('.hero');
+
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                const heroH = hero.offsetHeight;
+                if (scrollY > heroH) return;
+                heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
+                heroContent.style.opacity = 1 - (scrollY / heroH) * 1.5;
+            }, { passive: true });
+
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+            const allCards = document.querySelectorAll('.card');
+            allCards.forEach((card, i) => {
+                card.style.transitionDelay = `${(i % 4) * 100}ms`;
+                revealObserver.observe(card);
+            });
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const wasActive = btn.classList.contains('active');
+                    navItems.forEach((b) => b.classList.remove('active'));
+                    if (wasActive) {
+                        allCards.forEach((card) => {
+                            card.classList.remove('hidden');
+                            requestAnimationFrame(() => {
+                                if (!card.classList.contains('visible')) revealObserver.observe(card);
+                            });
+                        });
+                    } else {
+                        btn.classList.add('active');
+                        const filter = btn.dataset.filter;
+                        allCards.forEach((card) => {
+                            if (card.dataset.category === filter) {
+                                card.classList.remove('hidden');
+                                requestAnimationFrame(() => {
+                                    if (!card.classList.contains('visible')) revealObserver.observe(card);
+                                });
+                            } else {
+                                card.classList.add('hidden');
+                            }
+                        });
+                    }
+                    document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
