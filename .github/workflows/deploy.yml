@@ -6,28 +6,15 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Deploy to Netlify
-        uses: netlify/actions/cli@master
+        run: npx netlify-cli deploy --dir=./ --prod --message "Deploy ${{ github.sha }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        with:
-          args: deploy --dir=./ --prod
-      
-      - name: Output Netlify deploy URL
-        if: success()
-        run: echo "🚀 Site deployed successfully! Check it out at ${{ steps.netlify-deploy.outputs.NETLIFY_URL }}"
-      
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed. Check the logs for more information."
-          exit 1
-
