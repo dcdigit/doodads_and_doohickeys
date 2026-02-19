@@ -59,10 +59,20 @@
             will-change: transform;
         }
 
+        .hero-tagline {
+            font-size: clamp(1rem, 2.2vw, 1.35rem);
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 0.8rem;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+        }
+
         .hero-title {
             display: block;
             width: 100%;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             overflow: visible;
             cursor: default;
         }
@@ -128,10 +138,20 @@
             user-select: none;
         }
 
+        .hero-subtitle {
+            font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+            color: #ddd;
+            font-weight: 300;
+            max-width: 36em;
+            line-height: 1.6;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+            margin-bottom: 1.5rem;
+        }
+
         .hero-intro {
-            margin-top: 1.5rem;
+            margin-top: 0;
             font-size: clamp(0.95rem, 1.5vw, 1.1rem);
-            color: #bbb;
+            color: #999;
             font-weight: 400;
             max-width: 38em;
             line-height: 1.6;
@@ -199,6 +219,22 @@
             gap: 1.5rem;
         }
 
+        .section-label {
+            grid-column: 1 / -1;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: 2.5rem 0 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 0.25rem;
+        }
+
+        .section-label:first-of-type {
+            padding-top: 0;
+        }
+
         /* ── Card ── */
         .card {
             display: flex;
@@ -248,7 +284,7 @@
             translate: 0 0;
         }
 
-        .card.hidden { display: none; }
+        .card.hidden, .section-label.hidden { display: none; }
 
         .card:hover {
             border-color: rgba(255, 255, 255, 0.14);
@@ -399,28 +435,46 @@
     <!-- Hero -->
     <section class="hero">
         <div class="hero-content">
+            <p class="hero-tagline">Creative Technologist & Industrial Designer</p>
             <svg class="hero-title" id="heroSvg" viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" aria-label="Sylvan Cummings">
                 <defs>
                     <filter id="glass" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
-                        <!-- Cursor-reactive turbulence distortion -->
-                        <feTurbulence id="jellyNoise" type="turbulence" baseFrequency="0.012 0.010" numOctaves="2" seed="3" result="noise"/>
-                        <feDisplacementMap id="jellyDisplace" in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warped"/>
-                        <feDisplacementMap in="SourceAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
+                        <!-- Turbulence noise -->
+                        <feTurbulence id="jellyNoise" type="turbulence" baseFrequency="0.015 0.012" numOctaves="2" seed="3" result="noise"/>
 
-                        <feMorphology in="warpedAlpha" operator="dilate" radius="1" result="fat"/>
-                        <feGaussianBlur in="fat" stdDeviation="2.5" result="rounded"/>
+                        <!-- Cursor-following radial mask (point light on flat surface) -->
+                        <feFlood flood-color="white" flood-opacity="1" result="flat"/>
+                        <feDiffuseLighting in="flat" surfaceScale="1" diffuseConstant="1" lighting-color="white" result="cursorRaw">
+                            <fePointLight id="cursorLight" x="-300" y="-300" z="70"/>
+                        </feDiffuseLighting>
+                        <feComponentTransfer in="cursorRaw" result="cursorMask">
+                            <feFuncR type="gamma" amplitude="1" exponent="5" offset="-0.1"/>
+                            <feFuncG type="gamma" amplitude="1" exponent="5" offset="-0.1"/>
+                            <feFuncB type="gamma" amplitude="1" exponent="5" offset="-0.1"/>
+                        </feComponentTransfer>
+
+                        <!-- Localize noise: blend toward 0.5 (neutral) except near cursor -->
+                        <!-- result = mask * (noise - 0.5) + 0.5 -->
+                        <feComposite in="noise" in2="cursorMask" operator="arithmetic" k1="1" k2="0" k3="-0.5" k4="0.5" result="localNoise"/>
+
+                        <!-- Displacement only where cursor is -->
+                        <feDisplacementMap in="SourceGraphic" in2="localNoise" scale="40" xChannelSelector="R" yChannelSelector="G" result="warped"/>
+                        <feDisplacementMap in="SourceAlpha" in2="localNoise" scale="40" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
+
+                        <feMorphology in="warpedAlpha" operator="dilate" radius="1.5" result="fat"/>
+                        <feGaussianBlur in="fat" stdDeviation="3.5" result="rounded"/>
                         <feComponentTransfer in="rounded" result="mask">
                             <feFuncA type="table" tableValues="0 0 0 0 0 1 1 1 1"/>
                         </feComponentTransfer>
-                        <feFlood flood-color="white" flood-opacity="0.11" result="tint"/>
+                        <feFlood flood-color="white" flood-opacity="0.14" result="tint"/>
                         <feComposite in="tint" in2="mask" operator="in" result="body"/>
                         <feGaussianBlur in="mask" stdDeviation="1.5" result="edgeMap"/>
-                        <feSpecularLighting in="edgeMap" surfaceScale="2" specularConstant="0.8" specularExponent="50" result="highlight">
+                        <feSpecularLighting in="edgeMap" surfaceScale="2.5" specularConstant="1.0" specularExponent="40" result="highlight">
                             <fePointLight x="-150" y="-150" z="400"/>
                         </feSpecularLighting>
                         <feComposite in="highlight" in2="mask" operator="in" result="hlMasked"/>
                         <feComponentTransfer in="hlMasked" result="hlFaded">
-                            <feFuncA type="linear" slope="0.5" intercept="0"/>
+                            <feFuncA type="linear" slope="0.65" intercept="0"/>
                         </feComponentTransfer>
                         <feSpecularLighting in="edgeMap" surfaceScale="1.5" specularConstant="0.4" specularExponent="40" result="shadow">
                             <fePointLight x="600" y="500" z="200"/>
@@ -442,6 +496,7 @@
                 <text x="0" y="120" font-size="148" letter-spacing="-6">SYLVAN</text>
                 <text x="0" y="260" font-size="148" letter-spacing="-6">CUMMINGS</text>
             </svg>
+            <p class="hero-subtitle">Media explorations and Artistic demonstrations.</p>
             <nav class="hero-nav">
                 <button class="nav-item" data-filter="generative">Generative Art</button>
                 <span class="slash">/</span>
@@ -449,7 +504,6 @@
                 <span class="slash">/</span>
                 <button class="nav-item" data-filter="physical">Physical Design</button>
             </nav>
-            <p class="hero-intro">Creative technologist and industrial designer building generative art, interactive tools, and physical products.</p>
             <div class="tech-pills">
                 <span class="tech-pill">WebGL</span>
                 <span class="tech-pill">GLSL</span>
@@ -567,32 +621,102 @@
                 </div>
             </a>
 
-            <div class="card featured featured-right" data-category="physical" data-theme="light">
+            <!-- ── Industrial Design ── -->
+            <div class="section-label" data-category="physical">Industrial Design</div>
+
+            <a href="cove-chair.html" class="card featured" data-category="physical" data-theme="light">
                 <div class="card-img-wrap"><img class="card-img" src="thumbnails/covechair.webp" alt="Cove Lounge Chair" loading="lazy"></div>
                 <div class="card-body">
                     <h3 class="card-title">Cove Lounge Chair</h3>
                     <p class="card-desc">Work-from-home lounge chair. Triangular bent plywood base, dual armrest surfaces. Collaborative project — SolidWorks, physical prototyping.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
                 </div>
-            </div>
+            </a>
 
-            <!-- Row 6: Featured left + small right -->
-            <div class="card featured" data-category="physical" data-theme="light">
+            <a href="prism-truck.html" class="card" data-category="physical" data-theme="light">
                 <div class="card-img-wrap"><img class="card-img" src="thumbnails/prism.webp" alt="Prism Electric Truck" loading="lazy"></div>
                 <div class="card-body">
                     <h3 class="card-title">Prism Electric Truck</h3>
                     <p class="card-desc">Battery-electric Class 7-8 commercial vehicle concept. Hexagonal-prism cabin, chassis-integrated battery packs. SolidWorks, KeyShot rendering.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
                 </div>
-            </div>
+            </a>
 
-            <div class="card" data-category="physical">
+            <a href="geometric-stool.html" class="card" data-category="physical">
                 <div class="card-img-wrap"><img class="card-img" src="thumbnails/stoolhero.webp" alt="Geometric Stool" loading="lazy"></div>
                 <div class="card-body">
                     <h3 class="card-title">Geometric Stool</h3>
                     <p class="card-desc">Oak seat on sculptural black steel base. Intersecting planes for structural rigidity. CNC milling, welding, hand finishing.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
                 </div>
-            </div>
+            </a>
 
-            <!-- Row 7: Small left + featured right -->
+            <a href="waste-chair.html" class="card featured featured-right" data-category="physical">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/wastechair.webp" alt="Waste Chair" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Waste Chair</h3>
+                    <p class="card-desc">Chair built entirely from discarded materials — woven inner tubes on welded scrap-metal frame. MIG welding, material reclamation.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="grid-switch.html" class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/gridswitch.webp" alt="Grid Switch" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Grid Switch</h3>
+                    <p class="card-desc">Reimagined light switch — 3x3 grid of tactile rocker tiles replacing the standard toggle. SolidWorks, injection mold design.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="sunrise-mechanism.html" class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/mechanism.webp" alt="Sunrise Mechanism" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Sunrise Mechanism</h3>
+                    <p class="card-desc">Lamp adjustment mechanism with ball joint and threaded rod. Designed for injection molding. SolidWorks, GD&T tolerancing.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <!-- ── Ceramics ── -->
+            <div class="section-label" data-category="physical">Ceramics</div>
+
+            <a href="patterned-cups.html" class="card featured" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="photos/patterned-cups-stack.jpg" alt="Patterned Cups" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Patterned Cups</h3>
+                    <p class="card-desc">Stackable tumblers with bold wax-resist glaze patterns. Four colorways designed to nest with continuous pattern flow.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="altered-vase.html" class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="photos/altered-vase.jpg" alt="Altered Vase" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Altered Vase</h3>
+                    <p class="card-desc">Wheel-thrown cylinder with pressed indentations filled with glossy red glaze. Stoneware, high-fire reduction.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="bottle-vases.html" class="card" data-category="physical">
+                <div class="card-img-wrap"><img class="card-img" src="photos/bottle-trio.jpg" alt="Bottle Vases" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Bottle Vases</h3>
+                    <p class="card-desc">Angular bottle-form vases with cinched waists and flared rims. Green celadon to black tenmoku glaze series.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
+            <a href="reactive-glaze-bowl.html" class="card" data-category="physical" data-theme="light">
+                <div class="card-img-wrap"><img class="card-img" src="thumbnails/bowlblue.webp" alt="Reactive Glaze Bowl" loading="lazy"></div>
+                <div class="card-body">
+                    <h3 class="card-title">Reactive Glaze Bowl</h3>
+                    <p class="card-desc">Wheel-thrown ceramic with reactive blue glaze. Unpredictable pooling and breaking patterns from high-fire reduction.</p>
+                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
+                </div>
+            </a>
+
             <a href="VaseGenerator.html" class="card" data-category="tools">
                 <div class="card-img-wrap"><img class="card-img" src="thumbnails/VaseGenerator.webp" alt="Vase Generator" loading="lazy"></div>
                 <div class="card-body">
@@ -601,39 +725,6 @@
                     <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
                 </div>
             </a>
-
-            <div class="card featured featured-right" data-category="physical">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/wastechair.webp" alt="Waste Chair" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Waste Chair</h3>
-                    <p class="card-desc">Chair built entirely from discarded materials — woven inner tubes on welded scrap-metal frame. MIG welding, material reclamation.</p>
-                </div>
-            </div>
-
-            <!-- Row 8: Three small -->
-            <div class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/gridswitch.webp" alt="Grid Switch" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Grid Switch</h3>
-                    <p class="card-desc">Reimagined light switch — 3x3 grid of tactile rocker tiles replacing the standard toggle. SolidWorks, injection mold design.</p>
-                </div>
-            </div>
-
-            <div class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/bowlblue.webp" alt="Reactive Glaze Bowl" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Reactive Glaze Bowl</h3>
-                    <p class="card-desc">Wheel-thrown ceramic with reactive blue glaze. Unpredictable pooling and breaking patterns from high-fire reduction.</p>
-                </div>
-            </div>
-
-            <div class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/mechanism.webp" alt="Sunrise Mechanism" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Sunrise Mechanism</h3>
-                    <p class="card-desc">Lamp adjustment mechanism with ball joint and threaded rod. Designed for injection molding. SolidWorks, GD&T tolerancing.</p>
-                </div>
-            </div>
 
 
         </div>
@@ -772,63 +863,48 @@ void main(){
         })();
 
         // ═══════════════════════════════════════════════════
-        // Jelly text — cursor-reactive shape distortion
+        // Jelly text — localized cursor distortion
         // ═══════════════════════════════════════════════════
         (function() {
             const svg = document.getElementById('heroSvg');
             const noise = document.getElementById('jellyNoise');
-            const displace = document.getElementById('jellyDisplace');
-            const displace2 = displace ? displace.nextElementSibling : null; // alpha displacement
-            if (!svg || !noise || !displace) return;
+            const light = document.getElementById('cursorLight');
+            if (!svg || !noise || !light) return;
 
-            // Track mouse proximity to the SVG text area
-            let proximity = 0;       // 0 = far away, 1 = right on the text
-            let currentScale = 3;    // current displacement scale (resting)
-            let targetScale = 3;     // target displacement scale
-            let freqPhase = 0;       // animated frequency phase
+            let phase = 0;
+            let lightX = -300, lightY = -300;     // current light position
+            let targetX = -300, targetY = -300;   // target light position
 
             const svgPt = svg.createSVGPoint();
             function toSVG(cx, cy) {
                 svgPt.x = cx; svgPt.y = cy;
                 try { return svgPt.matrixTransform(svg.getScreenCTM().inverse()); }
-                catch(e) { return { x: -9999, y: -9999 }; }
+                catch(e) { return { x: -300, y: -300 }; }
             }
 
             document.addEventListener('mousemove', (e) => {
                 const p = toSVG(e.clientX, e.clientY);
-                // Text occupies roughly x:0-850, y:40-280 in SVG coords
-                const cx = Math.max(0, Math.min(1, (p.x - 0) / 850));
-                const cy = Math.max(0, Math.min(1, (p.y - 40) / 240));
-                // Distance from text bounds (0 = inside, grows outside)
-                const inside = (p.x > -50 && p.x < 900 && p.y > 0 && p.y < 320);
-                if (inside) {
-                    proximity = 1;
-                } else {
-                    const dx = p.x < -50 ? -50 - p.x : (p.x > 900 ? p.x - 900 : 0);
-                    const dy = p.y < 0 ? -p.y : (p.y > 320 ? p.y - 320 : 0);
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    proximity = Math.max(0, 1 - dist / 200);
-                }
+                targetX = p.x;
+                targetY = p.y;
             });
 
-            document.addEventListener('mouseleave', () => { proximity = 0; });
+            document.addEventListener('mouseleave', () => {
+                targetX = -300;
+                targetY = -300;
+            });
 
-            // Animate at ~30fps for performance
+            // Animate at ~30fps
             setInterval(() => {
-                // Target scale: 3 at rest, up to 16 when cursor is on the text
-                targetScale = 3 + proximity * 13;
+                // Smooth light position toward cursor
+                lightX += (targetX - lightX) * 0.25;
+                lightY += (targetY - lightY) * 0.25;
+                light.setAttribute('x', lightX.toFixed(1));
+                light.setAttribute('y', lightY.toFixed(1));
 
-                // Smooth interpolation toward target
-                currentScale += (targetScale - currentScale) * 0.15;
-
-                // Animate turbulence frequency for ripple motion
-                freqPhase += 0.02 * (0.3 + proximity * 0.7);
-                const bx = 0.012 + Math.sin(freqPhase) * 0.004 * proximity;
-                const by = 0.010 + Math.cos(freqPhase * 0.7) * 0.003 * proximity;
-
-                const s = currentScale.toFixed(1);
-                displace.setAttribute('scale', s);
-                if (displace2) displace2.setAttribute('scale', s);
+                // Subtle constant turbulence animation
+                phase += 0.015;
+                const bx = 0.015 + Math.sin(phase) * 0.002;
+                const by = 0.012 + Math.cos(phase * 0.7) * 0.0015;
                 noise.setAttribute('baseFrequency', `${bx.toFixed(5)} ${by.toFixed(5)}`);
             }, 33);
         })();
@@ -858,6 +934,7 @@ void main(){
             }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
 
             const allCards = document.querySelectorAll('.card');
+            const allFilterable = document.querySelectorAll('[data-category]');
             allCards.forEach((card, i) => {
                 card.style.transitionDelay = `${(i % 4) * 100}ms`;
                 revealObserver.observe(card);
@@ -869,23 +946,27 @@ void main(){
                     const wasActive = btn.classList.contains('active');
                     navItems.forEach((b) => b.classList.remove('active'));
                     if (wasActive) {
-                        allCards.forEach((card) => {
-                            card.classList.remove('hidden');
-                            requestAnimationFrame(() => {
-                                if (!card.classList.contains('visible')) revealObserver.observe(card);
-                            });
+                        allFilterable.forEach((el) => {
+                            el.classList.remove('hidden');
+                            if (el.classList.contains('card')) {
+                                requestAnimationFrame(() => {
+                                    if (!el.classList.contains('visible')) revealObserver.observe(el);
+                                });
+                            }
                         });
                     } else {
                         btn.classList.add('active');
                         const filter = btn.dataset.filter;
-                        allCards.forEach((card) => {
-                            if (card.dataset.category === filter) {
-                                card.classList.remove('hidden');
-                                requestAnimationFrame(() => {
-                                    if (!card.classList.contains('visible')) revealObserver.observe(card);
-                                });
+                        allFilterable.forEach((el) => {
+                            if (el.dataset.category === filter) {
+                                el.classList.remove('hidden');
+                                if (el.classList.contains('card')) {
+                                    requestAnimationFrame(() => {
+                                        if (!el.classList.contains('visible')) revealObserver.observe(el);
+                                    });
+                                }
                             } else {
-                                card.classList.add('hidden');
+                                el.classList.add('hidden');
                             }
                         });
                     }
