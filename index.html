@@ -6,973 +6,978 @@
     <title>Sylvan Cummings — Creative Technologist & Industrial Designer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
     <style>
-
         :root {
-            --text: #e5e5e5;
-            --text-secondary: #888;
-            --accent-purple: #7c3aed;
-            --accent-cyan: #06b6d4;
-            --glow: rgba(124, 58, 237, 0.15);
+            --bg: #eae6df;
+            --text: #1a1714;
+            --muted: #8a847a;
+            --accent: #d63200;
+            --rule: rgba(26, 23, 20, 0.12);
+            --hover-bg: rgba(26, 23, 20, 0.04);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0a0a0a;
+            font-family: 'DM Mono', monospace;
+            background: var(--bg);
             color: var(--text);
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        /* ── Live gradient background ── */
-        #live-bg {
+        /* ── Film grain overlay ── */
+        .grain {
             position: fixed;
             inset: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
             pointer-events: none;
+            z-index: 9999;
+            opacity: 0.35;
+            mix-blend-mode: multiply;
         }
+
+        .grain svg { width: 100%; height: 100%; }
 
         /* ── Hero ── */
         .hero {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
+            padding: 0 clamp(1.5rem, 4vw, 4rem);
+            padding-bottom: clamp(3rem, 6vh, 5rem);
             position: relative;
-            overflow: hidden;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            text-align: left;
-            padding: 2rem 2rem 2rem clamp(2rem, 6vw, 6rem);
-            width: 100%;
-            will-change: transform;
-        }
-
-        .hero-tagline {
-            font-size: clamp(1rem, 2.2vw, 1.35rem);
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.85);
-            margin-bottom: 0.8rem;
-            text-shadow: 0 2px 12px rgba(0,0,0,0.7);
         }
 
         .hero-title {
             display: block;
-            width: 100%;
-            margin-bottom: 1rem;
+            width: 70%;
+            margin-bottom: 1.5rem;
             overflow: visible;
             cursor: default;
+            user-select: none;
         }
 
         .hero-title text {
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-weight: 900;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
             text-transform: uppercase;
-            fill: white;
+            fill: var(--text);
             filter: url(#glass);
         }
 
-        .hero-nav {
+        .hero-title text:last-of-type {
+            fill: var(--accent);
+        }
+
+        .hero-meta {
             display: flex;
             flex-wrap: wrap;
+            align-items: baseline;
+            gap: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--text);
+        }
+
+        .hero-subtitle {
+            font-size: 0.82rem;
+            font-weight: 400;
+            color: var(--muted);
+            max-width: 32em;
+            line-height: 1.7;
+        }
+
+        .hero-links {
+            display: flex;
+            gap: 1.2rem;
+            margin-left: auto;
+        }
+
+        .hero-links a {
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-links a:hover { color: var(--text); }
+
+        .scroll-cue {
+            position: absolute;
+            top: 50%;
+            right: clamp(1.5rem, 4vw, 4rem);
+            font-size: 0.7rem;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            animation: drift 2.5s ease-in-out infinite;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
+
+        /* ── Filters ── */
+        .filter-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg);
+            border-bottom: 1px solid var(--rule);
+            padding: 0.9rem clamp(1.5rem, 4vw, 4rem);
+            display: flex;
             align-items: center;
-            gap: 0;
-            font-size: clamp(1.1rem, 3vw, 1.8rem);
-            font-weight: 300;
-            letter-spacing: -0.01em;
+            gap: 0.2rem;
+            backdrop-filter: blur(8px);
         }
 
-        .hero-nav .nav-item {
+        .filter-label {
+            font-size: 0.68rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-right: 1rem;
+        }
+
+        .filter-btn {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
             background: none;
-            border: none;
-            font: inherit;
-            color: var(--text-secondary);
+            border: 1px solid transparent;
+            color: var(--muted);
             cursor: pointer;
-            padding: 0.1em 0;
-            position: relative;
-            transition: color 0.3s ease;
-            text-shadow: 0 1px 8px rgba(0,0,0,0.6);
+            padding: 0.35em 0.8em;
+            transition: all 0.2s;
+            letter-spacing: 0.02em;
         }
 
-        .hero-nav .nav-item:hover {
+        .filter-btn:hover { color: var(--text); }
+
+        .filter-btn.active {
+            color: var(--text);
+            border-color: var(--text);
+        }
+
+        /* ── Directory ── */
+        .directory {
+            padding: 0 clamp(1.5rem, 4vw, 4rem);
+            padding-bottom: 6rem;
+        }
+
+        .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            padding: 3rem 0 0.8rem;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .section-label:first-child { padding-top: 0; }
+
+        /* ── Project Row ── */
+        .project-row {
+            display: grid;
+            grid-template-columns: clamp(2rem, 4vw, 3.5rem) 1fr auto;
+            align-items: baseline;
+            gap: 0;
+            padding: 1.2rem 0 0;
+            border-bottom: 1px solid var(--rule);
+            text-decoration: none;
+            color: var(--text);
+            position: relative;
+            cursor: pointer;
+            /* reveal animation */
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        background 0.15s;
+        }
+
+        .project-row.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .project-row.hidden { display: none; }
+        .section-label.hidden { display: none; }
+
+        .project-row:hover {
+            background: var(--hover-bg);
+        }
+
+        .row-num {
+            font-size: 0.72rem;
+            font-weight: 300;
+            color: var(--muted);
+            padding-top: 0.25em;
+            transition: color 0.2s;
+        }
+
+        .project-row:hover .row-num {
+            color: var(--accent);
+        }
+
+        .row-content { min-width: 0; }
+
+        .row-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.3rem, 3vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            transition: letter-spacing 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-row:hover .row-title {
+            letter-spacing: 0.02em;
+        }
+
+        .row-desc {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+            line-height: 1.5;
+            max-width: 50em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+        }
+
+        .row-tag {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            padding: 0.3em 0.7em;
+            border: 1px solid var(--rule);
+            white-space: nowrap;
+            align-self: center;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .project-row:hover .row-tag {
+            border-color: var(--text);
             color: var(--text);
         }
 
-        .hero-nav .nav-item.active {
-            color: #fff;
-            font-weight: 500;
+        /* ── Expandable image preview ── */
+        .row-expand {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .hero-nav .nav-item::after {
+        .project-row:hover .row-expand {
+            grid-template-rows: 1fr;
+        }
+
+        .row-expand-inner {
+            overflow: hidden;
+            min-height: 0;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+
+        .row-preview-img {
+            width: 50%;
+            margin-left: auto;
+            display: block;
+            height: 5rem;
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%);
+            mask-image: linear-gradient(to right, transparent 0%, black 18%);
+            margin-top: 0.6rem;
+        }
+
+
+
+        /* ── Footer ── */
+        footer {
+            padding: 2.5rem clamp(1.5rem, 4vw, 4rem);
+            border-top: 1px solid var(--text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-copy {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .footer-nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-nav a {
+            font-size: 0.75rem;
+            color: var(--text);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .footer-nav a::after {
             content: '';
             position: absolute;
             bottom: -2px;
             left: 0;
             width: 0;
             height: 1px;
-            background: #fff;
+            background: var(--accent);
             transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .hero-nav .nav-item.active::after {
-            width: 100%;
-        }
-
-        .hero-nav .slash {
-            color: rgba(255, 255, 255, 0.2);
-            margin: 0 0.4em;
-            font-weight: 200;
-            user-select: none;
-        }
-
-        .hero-subtitle {
-            font-size: clamp(1.05rem, 1.8vw, 1.3rem);
-            color: #ddd;
-            font-weight: 300;
-            max-width: 36em;
-            line-height: 1.6;
-            text-shadow: 0 2px 12px rgba(0,0,0,0.7);
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-intro {
-            margin-top: 0;
-            font-size: clamp(0.95rem, 1.5vw, 1.1rem);
-            color: #999;
-            font-weight: 400;
-            max-width: 38em;
-            line-height: 1.6;
-            text-shadow: 0 1px 8px rgba(0,0,0,0.6);
-        }
-
-        .tech-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 1rem;
-        }
-
-        .tech-pill {
-            font-size: 0.78rem;
-            font-weight: 500;
-            letter-spacing: 0.04em;
-            padding: 0.3em 0.75em;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-        }
-
-        .scroll-indicator {
-            position: absolute;
-            bottom: 2.5rem;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            text-decoration: none;
-            animation: bobble 2s ease-in-out infinite;
-        }
-
-        .scroll-indicator .arrow {
-            width: 20px;
-            height: 20px;
-            border-right: 2px solid var(--text-secondary);
-            border-bottom: 2px solid var(--text-secondary);
-            transform: rotate(45deg);
-        }
-
-        @keyframes bobble {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(8px); }
-        }
-
-        /* ── Grid ── */
-        .grid-section {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1.5rem 2rem 3rem;
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-        }
-
-        .section-label {
-            grid-column: 1 / -1;
-            font-size: 0.75rem;
-            font-weight: 500;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            padding: 2.5rem 0 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            margin-bottom: 0.25rem;
-        }
-
-        .section-label:first-of-type {
-            padding-top: 0;
-        }
-
-        /* ── Card ── */
-        .card {
-            display: flex;
-            flex-direction: column;
-            border-radius: 10px;
-            overflow: hidden;
-            background: rgba(10, 10, 10, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            text-decoration: none;
-            color: var(--text);
-            opacity: 0;
-            translate: 0 40px;
-            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                        translate 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                        border-color 0.3s ease,
-                        box-shadow 0.3s ease;
-        }
-
-        /* Featured cards span 2 of 3 columns */
-        .card.featured {
-            grid-column: span 2;
-        }
-
-        /* Alternate featured cards to the right side */
-        .card.featured-right {
-            grid-column: 2 / 4;
-        }
-
-        .card.featured .card-img-wrap {
-            aspect-ratio: 16 / 9;
-        }
-
-        .card.featured .card-body {
-            padding: 1.6rem 2rem 1.8rem;
-        }
-
-        .card.featured .card-title {
-            font-size: 1.5rem;
-        }
-
-        .card.featured .card-desc {
-            font-size: 1rem;
-        }
-
-        .card.visible {
-            opacity: 1;
-            translate: 0 0;
-        }
-
-        .card.hidden, .section-label.hidden { display: none; }
-
-        .card:hover {
-            border-color: rgba(255, 255, 255, 0.14);
-            box-shadow: 0 8px 40px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        /* ── Card image ── */
-        .card-img-wrap {
-            position: relative;
-            aspect-ratio: 16 / 10;
-            overflow: hidden;
-            background: #0a0a0a;
-        }
-
-        /* Dark vignette overlay — tames white-background thumbnails */
-        .card-img-wrap::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(10,10,10,0.6) 100%);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* Stronger treatment for known light-bg thumbnails */
-        .card[data-theme="light"] .card-img-wrap::after {
-            background:
-                radial-gradient(ellipse at center, transparent 20%, rgba(10,10,10,0.7) 100%),
-                linear-gradient(to bottom, rgba(10,10,10,0.15) 0%, rgba(10,10,10,0.4) 100%);
-        }
-
-        .card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .card:hover .card-img {
-            transform: scale(1.04);
-        }
-
-        /* ── Card body ── */
-        .card-body {
-            padding: 1.4rem 1.5rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            line-height: 1.25;
-        }
-
-        .card-desc {
-            font-size: 0.95rem;
-            color: #aaa;
-            line-height: 1.55;
-        }
-
-        .card-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--accent-cyan);
-            text-decoration: none;
-            margin-top: 0.25rem;
-            transition: gap 0.2s ease;
-        }
-
-        .card:hover .card-link { gap: 0.6rem; }
-
-        .card-link svg {
-            width: 14px;
-            height: 14px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* ── Footer ── */
-        footer {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            margin-top: 2rem;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .footer-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color 0.2s ease;
-            font-weight: 400;
-        }
-
-        .footer-links a:hover { color: var(--text); }
+        .footer-nav a:hover::after { width: 100%; }
 
         /* ── Responsive ── */
-        @media (max-width: 1024px) {
-            .gallery {
-                grid-template-columns: repeat(2, 1fr);
+        @media (max-width: 768px) {
+            .project-row {
+                grid-template-columns: clamp(2rem, 6vw, 2.5rem) 1fr;
             }
-            .card.featured,
-            .card.featured-right {
-                grid-column: 1 / -1;
-            }
-        }
 
-        @media (max-width: 640px) {
-            .gallery {
-                grid-template-columns: 1fr;
-                gap: 1.25rem;
+            .row-tag { display: none; }
+
+            .row-preview-img {
+                width: 100%;
+                height: 5rem;
+                margin-left: 0;
+                -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
+                mask-image: linear-gradient(to bottom, transparent 0%, black 20%);
             }
-            .grid-section { padding: 1rem; }
-            .card.featured .card-img-wrap {
-                aspect-ratio: 16 / 10;
-            }
-            .card.featured .card-title {
-                font-size: 1.25rem;
-            }
-            .card.featured .card-desc {
-                font-size: 0.95rem;
+
+            /* Always show on mobile (no hover) */
+            .row-expand {
+                grid-template-rows: 1fr;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- Live gradient background — raw WebGL, no Three.js -->
-    <canvas id="live-bg"></canvas>
+    <!-- Film grain -->
+    <div class="grain" aria-hidden="true">
+        <svg>
+            <filter id="grain-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+                <feColorMatrix type="saturate" values="0"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#grain-filter)"/>
+        </svg>
+    </div>
 
     <!-- Hero -->
     <section class="hero">
-        <div class="hero-content">
-            <p class="hero-tagline">Creative Technologist & Industrial Designer</p>
-            <svg class="hero-title" id="heroSvg" viewBox="0 0 900 280" xmlns="http://www.w3.org/2000/svg" aria-label="Sylvan Cummings">
-                <defs>
-                    <filter id="glass" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
-                        <!-- Turbulence noise -->
-                        <feTurbulence id="jellyNoise" type="turbulence" baseFrequency="0.015 0.012" numOctaves="2" seed="3" result="noise"/>
+        <svg class="hero-title" id="heroSvg" viewBox="0 0 1100 280" xmlns="http://www.w3.org/2000/svg" aria-label="Sylvan Cummings">
+            <defs>
+                <filter id="glass" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+                    <!-- Cursor ripple: canvas-driven displacement map -->
+                    <feFlood flood-color="rgb(128,128,128)" flood-opacity="1" result="neutral"/>
+                    <feImage id="rippleImage" preserveAspectRatio="none" result="rippleLocal"/>
+                    <feComposite in="rippleLocal" in2="neutral" operator="over" result="rippleMap"/>
+                    <feDisplacementMap in="SourceGraphic" in2="rippleMap" scale="30" xChannelSelector="R" yChannelSelector="G" result="rippled"/>
+                    <feDisplacementMap in="SourceAlpha" in2="rippleMap" scale="30" xChannelSelector="R" yChannelSelector="G" result="rippledAlpha"/>
 
-                        <!-- Cursor-following radial mask (point light on flat surface) -->
-                        <feFlood flood-color="white" flood-opacity="1" result="flat"/>
-                        <feDiffuseLighting in="flat" surfaceScale="1" diffuseConstant="1" lighting-color="white" result="cursorRaw">
-                            <fePointLight id="cursorLight" x="-300" y="-300" z="70"/>
-                        </feDiffuseLighting>
-                        <feComponentTransfer in="cursorRaw" result="cursorMask">
-                            <feFuncR type="gamma" amplitude="1" exponent="5" offset="-0.1"/>
-                            <feFuncG type="gamma" amplitude="1" exponent="5" offset="-0.1"/>
-                            <feFuncB type="gamma" amplitude="1" exponent="5" offset="-0.1"/>
-                        </feComponentTransfer>
+                    <!-- Glass texture: constant subtle turbulence -->
+                    <feTurbulence id="jellyNoise" type="turbulence" baseFrequency="0.012 0.010" numOctaves="2" seed="3" result="noise"/>
+                    <feDisplacementMap id="jellyDisplace" in="rippled" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warped"/>
+                    <feDisplacementMap in="rippledAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
 
-                        <!-- Localize noise: blend toward 0.5 (neutral) except near cursor -->
-                        <!-- result = mask * (noise - 0.5) + 0.5 -->
-                        <feComposite in="noise" in2="cursorMask" operator="arithmetic" k1="1" k2="0" k3="-0.5" k4="0.5" result="localNoise"/>
-
-                        <!-- Displacement only where cursor is -->
-                        <feDisplacementMap in="SourceGraphic" in2="localNoise" scale="40" xChannelSelector="R" yChannelSelector="G" result="warped"/>
-                        <feDisplacementMap in="SourceAlpha" in2="localNoise" scale="40" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
-
-                        <feMorphology in="warpedAlpha" operator="dilate" radius="1.5" result="fat"/>
-                        <feGaussianBlur in="fat" stdDeviation="3.5" result="rounded"/>
-                        <feComponentTransfer in="rounded" result="mask">
-                            <feFuncA type="table" tableValues="0 0 0 0 0 1 1 1 1"/>
-                        </feComponentTransfer>
-                        <feFlood flood-color="white" flood-opacity="0.14" result="tint"/>
-                        <feComposite in="tint" in2="mask" operator="in" result="body"/>
-                        <feGaussianBlur in="mask" stdDeviation="1.5" result="edgeMap"/>
-                        <feSpecularLighting in="edgeMap" surfaceScale="2.5" specularConstant="1.0" specularExponent="40" result="highlight">
-                            <fePointLight x="-150" y="-150" z="400"/>
-                        </feSpecularLighting>
-                        <feComposite in="highlight" in2="mask" operator="in" result="hlMasked"/>
-                        <feComponentTransfer in="hlMasked" result="hlFaded">
-                            <feFuncA type="linear" slope="0.65" intercept="0"/>
-                        </feComponentTransfer>
-                        <feSpecularLighting in="edgeMap" surfaceScale="1.5" specularConstant="0.4" specularExponent="40" result="shadow">
-                            <fePointLight x="600" y="500" z="200"/>
-                        </feSpecularLighting>
-                        <feComposite in="shadow" in2="mask" operator="in" result="shMasked"/>
-                        <feComponentTransfer in="shMasked" result="shFaded">
-                            <feFuncA type="linear" slope="0.3" intercept="0"/>
-                        </feComponentTransfer>
-                        <feImage href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='white' stop-opacity='.17'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='.07'/%3E%3C/linearGradient%3E%3Crect fill='url(%23g)' width='1' height='1'/%3E%3C/svg%3E" preserveAspectRatio="none" result="grad"/>
-                        <feComposite in="grad" in2="mask" operator="in" result="gradMasked"/>
-                        <feMerge>
-                            <feMergeNode in="body"/>
-                            <feMergeNode in="gradMasked"/>
-                            <feMergeNode in="shFaded"/>
-                            <feMergeNode in="hlFaded"/>
-                        </feMerge>
-                    </filter>
-                </defs>
-                <text x="0" y="120" font-size="148" letter-spacing="-6">SYLVAN</text>
-                <text x="0" y="260" font-size="148" letter-spacing="-6">CUMMINGS</text>
-            </svg>
+                    <feMorphology in="warpedAlpha" operator="dilate" radius="1" result="fat"/>
+                    <feGaussianBlur in="fat" stdDeviation="2.5" result="rounded"/>
+                    <feComponentTransfer in="rounded" result="mask">
+                        <feFuncA type="table" tableValues="0 0 0 0 0 1 1 1 1"/>
+                    </feComponentTransfer>
+                    <feFlood flood-color="rgba(26,23,20,0.06)" result="tint"/>
+                    <feComposite in="tint" in2="mask" operator="in" result="body"/>
+                    <feGaussianBlur in="mask" stdDeviation="1.5" result="edgeMap"/>
+                    <feSpecularLighting in="edgeMap" surfaceScale="2" specularConstant="0.6" specularExponent="50" result="highlight">
+                        <fePointLight x="-150" y="-150" z="400"/>
+                    </feSpecularLighting>
+                    <feComposite in="highlight" in2="mask" operator="in" result="hlMasked"/>
+                    <feComponentTransfer in="hlMasked" result="hlFaded">
+                        <feFuncA type="linear" slope="0.35" intercept="0"/>
+                    </feComponentTransfer>
+                    <feSpecularLighting in="edgeMap" surfaceScale="1.5" specularConstant="0.3" specularExponent="40" result="shadow">
+                        <fePointLight x="600" y="500" z="200"/>
+                    </feSpecularLighting>
+                    <feComposite in="shadow" in2="mask" operator="in" result="shMasked"/>
+                    <feComponentTransfer in="shMasked" result="shFaded">
+                        <feFuncA type="linear" slope="0.2" intercept="0"/>
+                    </feComponentTransfer>
+                    <feMerge>
+                        <feMergeNode in="warped"/>
+                        <feMergeNode in="body"/>
+                        <feMergeNode in="shFaded"/>
+                        <feMergeNode in="hlFaded"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            <text x="0" y="120" font-size="148" letter-spacing="-6">SYLVAN</text>
+            <text x="0" y="260" font-size="148" letter-spacing="-6">CUMMINGS</text>
+        </svg>
+        <div class="hero-meta">
             <p class="hero-subtitle">Media explorations and Artistic demonstrations.</p>
-            <nav class="hero-nav">
-                <button class="nav-item" data-filter="generative">Generative Art</button>
-                <span class="slash">/</span>
-                <button class="nav-item" data-filter="tools">Creative Tools</button>
-                <span class="slash">/</span>
-                <button class="nav-item" data-filter="physical">Physical Design</button>
-            </nav>
-            <div class="tech-pills">
-                <span class="tech-pill">WebGL</span>
-                <span class="tech-pill">GLSL</span>
-                <span class="tech-pill">Three.js</span>
-                <span class="tech-pill">JavaScript</span>
-                <span class="tech-pill">React Native</span>
-                <span class="tech-pill">SolidWorks</span>
-                <span class="tech-pill">Ceramics</span>
+            <div class="hero-links">
+                <a href="https://github.com/sylvan-cu" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://www.linkedin.com/in/sylvan-cummings-a2a645247" target="_blank" rel="noopener">LinkedIn</a>
+                <a href="mailto:sylvancummings@gmail.com">Email</a>
             </div>
         </div>
-        <a href="#projects" class="scroll-indicator">
-            <span>Explore</span>
-            <div class="arrow"></div>
-        </a>
+        <span class="scroll-cue">Scroll</span>
     </section>
 
-    <div id="projects"></div>
+    <!-- Filter bar -->
+    <nav class="filter-bar" id="filterBar">
+        <span class="filter-label">Filter</span>
+        <button class="filter-btn" data-filter="generative">Generative Art</button>
+        <button class="filter-btn" data-filter="tools">Creative Tools</button>
+        <button class="filter-btn" data-filter="physical">Physical Design</button>
+    </nav>
 
-    <!-- Project Grid -->
-    <section class="grid-section">
-        <div class="gallery">
+    <!-- Directory listing -->
+    <section class="directory" id="directory">
 
-            <!-- Row 1: Featured left + small right -->
-            <a href="smoke.html" class="card featured" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/smoke.webp" alt="Strange Attractors" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Strange Attractors</h3>
-                    <p class="card-desc">Real-time chaotic attractor visualization with luminous particle trails. WebGL, custom GLSL shaders.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="smoke.html" class="project-row" data-category="generative" data-img="thumbnails/smoke.webp">
+            <span class="row-num">01</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Strange Attractors">Strange Attractors</h2>
+                <p class="row-desc">Real-time chaotic attractor visualization with luminous particle trails. WebGL, custom GLSL shaders.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/smoke.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="PetriDish.html" class="card" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/PetriDish.webp" alt="Petri Dish" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Petri Dish</h3>
-                    <p class="card-desc">Reaction-diffusion simulation with interactive brush painting. Configurable feed/kill rates, presets, and image export.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="PetriDish.html" class="project-row" data-category="generative" data-img="thumbnails/PetriDish.webp">
+            <span class="row-num">02</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Petri Dish">Petri Dish</h2>
+                <p class="row-desc">Reaction-diffusion simulation with interactive brush painting. Configurable feed/kill rates, presets, and image export.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/PetriDish.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <!-- Row 2: Small left + featured right -->
-            <a href="GradientUltra.html" class="card" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/GradientUltra.webp" alt="Gradient Ultra" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Gradient Ultra</h3>
-                    <p class="card-desc">Full-control GLSL shape-gradient engine — grid topology, morphing geometry, noise warping, pulse animation, and image export.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="GradientUltra.html" class="project-row" data-category="generative" data-img="thumbnails/GradientUltra.webp">
+            <span class="row-num">03</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Gradient Ultra">Gradient Ultra</h2>
+                <p class="row-desc">Full-control GLSL shape-gradient engine — grid topology, morphing geometry, noise warping, pulse animation, and image export.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/GradientUltra.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="interactive-display.html" class="card featured featured-right" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/interactive-display.webp" alt="Particle Universe" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Particle Universe</h3>
-                    <p class="card-desc">Interactive n-body particle system with attraction, repulsion, and orbit mechanics. Mouse-driven force fields, multiple color themes.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="interactive-display.html" class="project-row" data-category="generative" data-img="thumbnails/interactive-display.webp">
+            <span class="row-num">04</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Particle Universe">Particle Universe</h2>
+                <p class="row-desc">Interactive n-body particle system with attraction, repulsion, and orbit mechanics. Mouse-driven force fields, multiple color themes.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/interactive-display.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <!-- Row 3: Three small -->
-            <a href="Hexagons.html" class="card" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/Hexagons.webp" alt="Hexagons" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Hexagons</h3>
-                    <p class="card-desc">Tessellated hexagonal grid with ripple propagation from interaction points. Canvas 2D rendering.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="Hexagons.html" class="project-row" data-category="generative" data-img="thumbnails/Hexagons.webp">
+            <span class="row-num">05</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Hexagons">Hexagons</h2>
+                <p class="row-desc">Tessellated hexagonal grid with ripple propagation from interaction points. Canvas 2D rendering.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/Hexagons.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="ClaudeMorph.html" class="card" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/ClaudeMorph.webp" alt="Claude Morph" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Claude Morph</h3>
-                    <p class="card-desc">Smooth morphing between organic and crystalline 3D geometry. Three.js with procedural mesh generation.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="ClaudeMorph.html" class="project-row" data-category="generative" data-img="thumbnails/ClaudeMorph.webp">
+            <span class="row-num">06</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Claude Morph">Claude Morph</h2>
+                <p class="row-desc">Smooth morphing between organic and crystalline 3D geometry. Three.js with procedural mesh generation.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/ClaudeMorph.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="3dgradient.html" class="card" data-category="generative">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/3dgradient.webp" alt="3D Gradient" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">3D Gradient</h3>
-                    <p class="card-desc">Gradients mapped onto deforming 3D surfaces. Three.js with custom vertex shaders and orbit controls.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="3dgradient.html" class="project-row" data-category="generative" data-img="thumbnails/3dgradient.webp">
+            <span class="row-num">07</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="3D Gradient">3D Gradient</h2>
+                <p class="row-desc">Gradients mapped onto deforming 3D surfaces. Three.js with custom vertex shaders and orbit controls.</p>
+            </div>
+            <span class="row-tag">Generative</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/3dgradient.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <!-- Row 4: Featured left + small right -->
-            <a href="LiquidTiles.html" class="card featured" data-category="tools">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/LiquidTiles.webp" alt="Liquid Tiles" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Liquid Tiles</h3>
-                    <p class="card-desc">Metaball-style tile generator with SVG goo filter. Adjustable grid, geometry, melt radius, and tile export.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="LiquidTiles.html" class="project-row" data-category="tools" data-img="thumbnails/LiquidTiles.webp">
+            <span class="row-num">08</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Liquid Tiles">Liquid Tiles</h2>
+                <p class="row-desc">Metaball-style tile generator with SVG goo filter. Adjustable grid, geometry, melt radius, and tile export.</p>
+            </div>
+            <span class="row-tag">Tools</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/LiquidTiles.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="PatternStackV2.html" class="card" data-category="tools">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/PatternStackV2.webp" alt="Pattern Stack" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Pattern Stack</h3>
-                    <p class="card-desc">Layered isometric pattern generator with blend modes. Stack multiple pattern layers and export composites.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="PatternStackV2.html" class="project-row" data-category="tools" data-img="thumbnails/PatternStackV2.webp">
+            <span class="row-num">09</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Pattern Stack">Pattern Stack</h2>
+                <p class="row-desc">Layered isometric pattern generator with blend modes. Stack multiple pattern layers and export composites.</p>
+            </div>
+            <span class="row-tag">Tools</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/PatternStackV2.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <!-- Row 5: Small left + featured right -->
-            <a href="color-guessing-game.html" class="card" data-category="tools" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/color-guessing-game.webp" alt="Color Guessing Game" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Color Guessing Game</h3>
-                    <p class="card-desc">Color perception trainer — identify the odd shade from an increasingly difficult grid of similar hues.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="color-guessing-game.html" class="project-row" data-category="tools" data-img="thumbnails/color-guessing-game.webp">
+            <span class="row-num">10</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Color Guessing Game">Color Guessing Game</h2>
+                <p class="row-desc">Color perception trainer — identify the odd shade from an increasingly difficult grid of similar hues.</p>
+            </div>
+            <span class="row-tag">Tools</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/color-guessing-game.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <!-- ── Industrial Design ── -->
-            <div class="section-label" data-category="physical">Industrial Design</div>
+        <!-- Industrial Design -->
+        <div class="section-label" data-category="physical">Industrial Design</div>
 
-            <a href="cove-chair.html" class="card featured" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/covechair.webp" alt="Cove Lounge Chair" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Cove Lounge Chair</h3>
-                    <p class="card-desc">Work-from-home lounge chair. Triangular bent plywood base, dual armrest surfaces. Collaborative project — SolidWorks, physical prototyping.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="cove-chair.html" class="project-row" data-category="physical" data-img="thumbnails/covechair.webp">
+            <span class="row-num">11</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Cove Lounge Chair">Cove Lounge Chair</h2>
+                <p class="row-desc">Work-from-home lounge chair. Triangular bent plywood base, dual armrest surfaces. Collaborative project — SolidWorks, physical prototyping.</p>
+            </div>
+            <span class="row-tag">Product</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/covechair.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="prism-truck.html" class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/prism.webp" alt="Prism Electric Truck" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Prism Electric Truck</h3>
-                    <p class="card-desc">Battery-electric Class 7-8 commercial vehicle concept. Hexagonal-prism cabin, chassis-integrated battery packs. SolidWorks, KeyShot rendering.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="prism-truck.html" class="project-row" data-category="physical" data-img="thumbnails/prism.webp">
+            <span class="row-num">12</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Prism Electric Truck">Prism Electric Truck</h2>
+                <p class="row-desc">Battery-electric Class 7-8 commercial vehicle concept. Hexagonal-prism cabin, chassis-integrated battery packs. SolidWorks, KeyShot rendering.</p>
+            </div>
+            <span class="row-tag">Vehicle</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/prism.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="geometric-stool.html" class="card" data-category="physical">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/stoolhero.webp" alt="Geometric Stool" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Geometric Stool</h3>
-                    <p class="card-desc">Oak seat on sculptural black steel base. Intersecting planes for structural rigidity. CNC milling, welding, hand finishing.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="geometric-stool.html" class="project-row" data-category="physical" data-img="thumbnails/stoolhero.webp">
+            <span class="row-num">13</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Geometric Stool">Geometric Stool</h2>
+                <p class="row-desc">Oak seat on sculptural black steel base. Intersecting planes for structural rigidity. CNC milling, welding, hand finishing.</p>
+            </div>
+            <span class="row-tag">Furniture</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/stoolhero.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="waste-chair.html" class="card featured featured-right" data-category="physical">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/wastechair.webp" alt="Waste Chair" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Waste Chair</h3>
-                    <p class="card-desc">Chair built entirely from discarded materials — woven inner tubes on welded scrap-metal frame. MIG welding, material reclamation.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="waste-chair.html" class="project-row" data-category="physical" data-img="thumbnails/wastechair.webp">
+            <span class="row-num">14</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Waste Chair">Waste Chair</h2>
+                <p class="row-desc">Chair built entirely from discarded materials — woven inner tubes on welded scrap-metal frame. MIG welding, material reclamation.</p>
+            </div>
+            <span class="row-tag">Furniture</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/wastechair.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="grid-switch.html" class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/gridswitch.webp" alt="Grid Switch" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Grid Switch</h3>
-                    <p class="card-desc">Reimagined light switch — 3x3 grid of tactile rocker tiles replacing the standard toggle. SolidWorks, injection mold design.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="grid-switch.html" class="project-row" data-category="physical" data-img="thumbnails/gridswitch.webp">
+            <span class="row-num">15</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Grid Switch">Grid Switch</h2>
+                <p class="row-desc">Reimagined light switch — 3x3 grid of tactile rocker tiles replacing the standard toggle. SolidWorks, injection mold design.</p>
+            </div>
+            <span class="row-tag">Product</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/gridswitch.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="sunrise-mechanism.html" class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/mechanism.webp" alt="Sunrise Mechanism" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Sunrise Mechanism</h3>
-                    <p class="card-desc">Lamp adjustment mechanism with ball joint and threaded rod. Designed for injection molding. SolidWorks, GD&T tolerancing.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="sunrise-mechanism.html" class="project-row" data-category="physical" data-img="thumbnails/mechanism.webp">
+            <span class="row-num">16</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Sunrise Mechanism">Sunrise Mechanism</h2>
+                <p class="row-desc">Lamp adjustment mechanism with ball joint and threaded rod. Designed for injection molding. SolidWorks, GD&T tolerancing.</p>
+            </div>
+            <span class="row-tag">Mechanism</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/mechanism.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <!-- ── Ceramics ── -->
-            <div class="section-label" data-category="physical">Ceramics</div>
+        <!-- Ceramics -->
+        <div class="section-label" data-category="physical">Ceramics</div>
 
-            <a href="patterned-cups.html" class="card featured" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="photos/patterned-cups-stack.jpg" alt="Patterned Cups" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Patterned Cups</h3>
-                    <p class="card-desc">Stackable tumblers with bold wax-resist glaze patterns. Four colorways designed to nest with continuous pattern flow.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="patterned-cups.html" class="project-row" data-category="physical" data-img="photos/patterned-cups-stack.jpg">
+            <span class="row-num">17</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Patterned Cups">Patterned Cups</h2>
+                <p class="row-desc">Stackable tumblers with bold wax-resist glaze patterns. Four colorways designed to nest with continuous pattern flow.</p>
+            </div>
+            <span class="row-tag">Ceramics</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="photos/patterned-cups-stack.jpg" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="altered-vase.html" class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="photos/altered-vase.jpg" alt="Altered Vase" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Altered Vase</h3>
-                    <p class="card-desc">Wheel-thrown cylinder with pressed indentations filled with glossy red glaze. Stoneware, high-fire reduction.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="altered-vase.html" class="project-row" data-category="physical" data-img="photos/altered-vase.jpg">
+            <span class="row-num">18</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Altered Vase">Altered Vase</h2>
+                <p class="row-desc">Wheel-thrown cylinder with pressed indentations filled with glossy red glaze. Stoneware, high-fire reduction.</p>
+            </div>
+            <span class="row-tag">Ceramics</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="photos/altered-vase.jpg" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="bottle-vases.html" class="card" data-category="physical">
-                <div class="card-img-wrap"><img class="card-img" src="photos/bottle-trio.jpg" alt="Bottle Vases" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Bottle Vases</h3>
-                    <p class="card-desc">Angular bottle-form vases with cinched waists and flared rims. Green celadon to black tenmoku glaze series.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="bottle-vases.html" class="project-row" data-category="physical" data-img="photos/bottle-trio.jpg">
+            <span class="row-num">19</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Bottle Vases">Bottle Vases</h2>
+                <p class="row-desc">Angular bottle-form vases with cinched waists and flared rims. Green celadon to black tenmoku glaze series.</p>
+            </div>
+            <span class="row-tag">Ceramics</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="photos/bottle-trio.jpg" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="reactive-glaze-bowl.html" class="card" data-category="physical" data-theme="light">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/bowlblue.webp" alt="Reactive Glaze Bowl" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Reactive Glaze Bowl</h3>
-                    <p class="card-desc">Wheel-thrown ceramic with reactive blue glaze. Unpredictable pooling and breaking patterns from high-fire reduction.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="reactive-glaze-bowl.html" class="project-row" data-category="physical" data-img="thumbnails/bowlblue.webp">
+            <span class="row-num">20</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Reactive Glaze Bowl">Reactive Glaze Bowl</h2>
+                <p class="row-desc">Wheel-thrown ceramic with reactive blue glaze. Unpredictable pooling and breaking patterns from high-fire reduction.</p>
+            </div>
+            <span class="row-tag">Ceramics</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/bowlblue.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-            <a href="VaseGenerator.html" class="card" data-category="tools">
-                <div class="card-img-wrap"><img class="card-img" src="thumbnails/VaseGenerator.webp" alt="Vase Generator" loading="lazy"></div>
-                <div class="card-body">
-                    <h3 class="card-title">Vase Generator</h3>
-                    <p class="card-desc">Parametric 3D vase modeler with adjustable curvature, line count, and shell opacity. Three.js with auto-rotation.</p>
-                    <span class="card-link">Open <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg></span>
-                </div>
-            </a>
+        <a href="VaseGenerator.html" class="project-row" data-category="tools" data-img="thumbnails/VaseGenerator.webp">
+            <span class="row-num">21</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Vase Generator">Vase Generator</h2>
+                <p class="row-desc">Parametric 3D vase modeler with adjustable curvature, line count, and shell opacity. Three.js with auto-rotation.</p>
+            </div>
+            <span class="row-tag">Tools</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/VaseGenerator.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
 
-
-        </div>
     </section>
 
     <footer>
-        <div class="footer-links">
+        <span class="footer-copy">&copy; 2026 Sylvan Cummings</span>
+        <nav class="footer-nav">
             <a href="https://github.com/sylvan-cu" target="_blank" rel="noopener">GitHub</a>
             <a href="https://www.linkedin.com/in/sylvan-cummings-a2a645247" target="_blank" rel="noopener">LinkedIn</a>
             <a href="mailto:sylvancummings@gmail.com">Email</a>
-        </div>
-        <p>&copy; 2026 Sylvan Cummings</p>
+        </nav>
     </footer>
 
     <script>
         // ═══════════════════════════════════════════════════
-        // WebGL background with scroll-based opacity fade
+        // Sample image edge color → fill expand background
         // ═══════════════════════════════════════════════════
         (function() {
-            const canvas = document.getElementById('live-bg');
-            const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false });
-            if (!gl) { canvas.style.background = '#111'; return; }
+            const sampleCanvas = document.createElement('canvas');
+            const sCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
 
-            const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-            function resize() {
-                canvas.width = window.innerWidth * dpr;
-                canvas.height = window.innerHeight * dpr;
-                gl.viewport(0, 0, canvas.width, canvas.height);
-            }
-            resize();
-
-            // Enable blending for alpha
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-            const vs = `attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0,1);}`;
-            const fs = `precision mediump float;
-uniform float uTime,uAspect,uAlpha;
-varying vec2 vUv;
-float random(vec2 st){return fract(sin(dot(st,vec2(12.9898,78.233)))*43758.5453);}
-vec3 mod289v3(vec3 x){return x-floor(x*(1./289.))*289.;}
-vec2 mod289v2(vec2 x){return x-floor(x*(1./289.))*289.;}
-vec3 permute(vec3 x){return mod289v3(((x*34.)+1.)*x);}
-float snoise(vec2 v){
-    const vec4 C=vec4(.211324865405187,.366025403784439,-.577350269189626,.024390243902439);
-    vec2 i=floor(v+dot(v,C.yy));vec2 x0=v-i+dot(i,C.xx);
-    vec2 i1=(x0.x>x0.y)?vec2(1,0):vec2(0,1);
-    vec4 x12=x0.xyxy+C.xxzz;x12.xy-=i1;i=mod289v2(i);
-    vec3 p=permute(permute(i.y+vec3(0,i1.y,1))+i.x+vec3(0,i1.x,1));
-    vec3 m=max(.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.);
-    m=m*m;m=m*m;
-    vec3 x=2.*fract(p*C.www)-1.;vec3 h=abs(x)-.5;
-    vec3 ox=floor(x+.5);vec3 a0=x-ox;
-    m*=1.79284291400159-.85373472095314*(a0*a0+h*h);
-    vec3 g;g.x=a0.x*x0.x+h.x*x0.y;g.yz=a0.yz*x12.xz+h.yz*x12.yw;
-    return 130.*dot(m,g);
-}
-vec2 rotate(vec2 v,float a){float s=sin(a),c=cos(a);return mat2(c,-s,s,c)*v;}
-float sdBox(vec2 p,vec2 b,float r){vec2 d=abs(p)-b+r;return length(max(d,0.))+min(max(d.x,d.y),0.)-r;}
-void main(){
-    vec2 st=vUv;
-    float n=snoise(vec2(st.x,st.y+uTime*.1)*2.);
-    st+=vec2(n)*.032;
-    vec2 grid=vec2(126,123);
-    vec2 gridSt=st*grid;vec2 cellId=floor(gridSt);
-    vec2 randOff=vec2(random(cellId)-.5,random(cellId+100.)-.5)*.242;
-    vec2 cellUv=fract(gridSt)-.5-randOff;
-    vec2 normId=(cellId+.5)/grid;
-    float influence=snoise(normId*2.+uTime*.1)*.5+.5;
-    vec2 cv=(normId-.5);cv.x*=uAspect;
-    float dist=length(cv);
-    float wave=sin(dist*15.789-uTime);
-    influence+=wave*.343;
-    influence=clamp(influence,0.,1.);
-    float sz=mix(.8,.1,influence)*.5;
-    float cellRot=(random(cellId)-.5)*.351*6.28;
-    vec2 rUv=rotate(cellUv,cellRot);
-    float d1=length(rUv)-sz;
-    float d2=sdBox(rUv,vec2(sz),.012*sz);
-    float dF=mix(d1,d2,influence);
-    float alpha=1.-smoothstep(0.,.02,dF);
-    vec3 colA=vec3(1.,.2,.4);vec3 colB=vec3(0.,.533,1.);
-    vec3 c=mix(colA,colB,influence);
-    vec3 bg=vec3(.039);
-    vec3 col=mix(bg,c,alpha);
-    gl_FragColor=vec4(col,uAlpha);
-}`;
-
-            function compile(type, src) {
-                const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s;
-            }
-            const prog = gl.createProgram();
-            gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
-            gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
-            gl.linkProgram(prog); gl.useProgram(prog);
-
-            const buf = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
-            const pLoc = gl.getAttribLocation(prog, 'p');
-            gl.enableVertexAttribArray(pLoc);
-            gl.vertexAttribPointer(pLoc, 2, gl.FLOAT, false, 0, 0);
-
-            const uTime = gl.getUniformLocation(prog, 'uTime');
-            const uAspect = gl.getUniformLocation(prog, 'uAspect');
-            const uAlpha = gl.getUniformLocation(prog, 'uAlpha');
-            gl.uniform1f(uAspect, window.innerWidth / window.innerHeight);
-            gl.uniform1f(uAlpha, 1.0);
-
-            let time = 0, last = 0, scrollAlpha = 1.0;
-
-            // Scroll fade — gradient fades as you scroll past the hero
-            const hero = document.querySelector('.hero');
-            window.addEventListener('scroll', () => {
-                const heroH = hero.offsetHeight;
-                const progress = Math.min(window.scrollY / (heroH * 0.6), 1);
-                scrollAlpha = 1.0 - progress * 0.85; // fades to 0.15
-            }, { passive: true });
-
-            function frame(now) {
-                requestAnimationFrame(frame);
-                const dt = Math.min((now - last) / 1000, 0.05);
-                last = now; time += dt * 0.2;
-                gl.clearColor(0, 0, 0, 0);
-                gl.clear(gl.COLOR_BUFFER_BIT);
-                gl.uniform1f(uTime, time);
-                gl.uniform1f(uAlpha, scrollAlpha);
-                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-            }
-            requestAnimationFrame(frame);
-
-            window.addEventListener('resize', () => {
-                resize();
-                gl.uniform1f(uAspect, window.innerWidth / window.innerHeight);
-            });
-        })();
-
-        // ═══════════════════════════════════════════════════
-        // Jelly text — localized cursor distortion
-        // ═══════════════════════════════════════════════════
-        (function() {
-            const svg = document.getElementById('heroSvg');
-            const noise = document.getElementById('jellyNoise');
-            const light = document.getElementById('cursorLight');
-            if (!svg || !noise || !light) return;
-
-            let phase = 0;
-            let lightX = -300, lightY = -300;     // current light position
-            let targetX = -300, targetY = -300;   // target light position
-
-            const svgPt = svg.createSVGPoint();
-            function toSVG(cx, cy) {
-                svgPt.x = cx; svgPt.y = cy;
-                try { return svgPt.matrixTransform(svg.getScreenCTM().inverse()); }
-                catch(e) { return { x: -300, y: -300 }; }
+            function sampleEdgeColor(img) {
+                sampleCanvas.width = img.naturalWidth;
+                sampleCanvas.height = img.naturalHeight;
+                sCtx.drawImage(img, 0, 0);
+                // Sample a vertical strip along the left edge
+                const strip = sCtx.getImageData(0, 0, 1, img.naturalHeight).data;
+                let r = 0, g = 0, b = 0, count = 0;
+                for (let i = 0; i < strip.length; i += 4) {
+                    r += strip[i]; g += strip[i+1]; b += strip[i+2];
+                    count++;
+                }
+                return `rgb(${Math.round(r/count)},${Math.round(g/count)},${Math.round(b/count)})`;
             }
 
-            document.addEventListener('mousemove', (e) => {
-                const p = toSVG(e.clientX, e.clientY);
-                targetX = p.x;
-                targetY = p.y;
-            });
+            document.querySelectorAll('.project-row').forEach(row => {
+                const img = row.querySelector('.row-preview-img');
+                const inner = row.querySelector('.row-expand-inner');
+                if (!img || !inner) return;
 
-            document.addEventListener('mouseleave', () => {
-                targetX = -300;
-                targetY = -300;
-            });
+                let sampled = false, color = '';
 
-            // Animate at ~30fps
-            setInterval(() => {
-                // Smooth light position toward cursor
-                lightX += (targetX - lightX) * 0.25;
-                lightY += (targetY - lightY) * 0.25;
-                light.setAttribute('x', lightX.toFixed(1));
-                light.setAttribute('y', lightY.toFixed(1));
+                row.addEventListener('mouseenter', () => {
+                    if (!sampled && img.complete && img.naturalWidth > 0) {
+                        try { color = sampleEdgeColor(img); sampled = true; } catch(e) {}
+                    }
+                    if (color) inner.style.backgroundColor = color;
+                });
 
-                // Subtle constant turbulence animation
-                phase += 0.015;
-                const bx = 0.015 + Math.sin(phase) * 0.002;
-                const by = 0.012 + Math.cos(phase * 0.7) * 0.0015;
-                noise.setAttribute('baseFrequency', `${bx.toFixed(5)} ${by.toFixed(5)}`);
-            }, 33);
-        })();
+                row.addEventListener('mouseleave', () => {
+                    inner.style.backgroundColor = '';
+                });
 
-        // ═══════════════════════════════════════════════════
-        // Parallax + card reveal + category filter
-        // ═══════════════════════════════════════════════════
-        (function() {
-            const heroContent = document.querySelector('.hero-content');
-            const hero = document.querySelector('.hero');
-
-            window.addEventListener('scroll', () => {
-                const scrollY = window.scrollY;
-                const heroH = hero.offsetHeight;
-                if (scrollY > heroH) return;
-                heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
-                heroContent.style.opacity = 1 - (scrollY / heroH) * 1.5;
-            }, { passive: true });
-
-            const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        revealObserver.unobserve(entry.target);
+                // Re-sample when image loads (lazy loaded images)
+                img.addEventListener('load', () => {
+                    if (!sampled && img.naturalWidth > 0) {
+                        try { color = sampleEdgeColor(img); sampled = true; } catch(e) {}
                     }
                 });
-            }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-
-            const allCards = document.querySelectorAll('.card');
-            const allFilterable = document.querySelectorAll('[data-category]');
-            allCards.forEach((card, i) => {
-                card.style.transitionDelay = `${(i % 4) * 100}ms`;
-                revealObserver.observe(card);
             });
+        })();
 
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach((btn) => {
+        // ═══════════════════════════════════════════════════
+        // Text scramble on hover
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&';
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            if (isMobile) return;
+
+            document.querySelectorAll('.row-title').forEach(el => {
+                const original = el.dataset.text;
+                let interval = null;
+                let iteration = 0;
+
+                el.closest('.project-row').addEventListener('mouseenter', () => {
+                    iteration = 0;
+                    clearInterval(interval);
+                    interval = setInterval(() => {
+                        el.textContent = original.split('').map((char, i) => {
+                            if (i < iteration) return original[i];
+                            if (char === ' ') return ' ';
+                            return chars[Math.floor(Math.random() * chars.length)];
+                        }).join('');
+                        iteration += 1 / 2;
+                        if (iteration >= original.length) {
+                            clearInterval(interval);
+                            el.textContent = original;
+                        }
+                    }, 25);
+                });
+
+                el.closest('.project-row').addEventListener('mouseleave', () => {
+                    clearInterval(interval);
+                    el.textContent = original;
+                });
+            });
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Scroll reveal
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
+
+            document.querySelectorAll('.project-row').forEach((row, i) => {
+                row.style.transitionDelay = `${(i % 6) * 50}ms`;
+                observer.observe(row);
+            });
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Category filter
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const btns = document.querySelectorAll('.filter-btn');
+            const allFilterable = document.querySelectorAll('[data-category]');
+
+            btns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const wasActive = btn.classList.contains('active');
-                    navItems.forEach((b) => b.classList.remove('active'));
+                    btns.forEach(b => b.classList.remove('active'));
+
                     if (wasActive) {
-                        allFilterable.forEach((el) => {
-                            el.classList.remove('hidden');
-                            if (el.classList.contains('card')) {
-                                requestAnimationFrame(() => {
-                                    if (!el.classList.contains('visible')) revealObserver.observe(el);
-                                });
-                            }
-                        });
+                        allFilterable.forEach(el => el.classList.remove('hidden'));
                     } else {
                         btn.classList.add('active');
                         const filter = btn.dataset.filter;
-                        allFilterable.forEach((el) => {
+                        allFilterable.forEach(el => {
                             if (el.dataset.category === filter) {
                                 el.classList.remove('hidden');
-                                if (el.classList.contains('card')) {
-                                    requestAnimationFrame(() => {
-                                        if (!el.classList.contains('visible')) revealObserver.observe(el);
-                                    });
-                                }
                             } else {
                                 el.classList.add('hidden');
                             }
                         });
                     }
-                    document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+
+                    document.getElementById('directory').scrollIntoView({ behavior: 'smooth' });
                 });
             });
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Jelly text — localized cursor ripple (shape distortion)
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const svg = document.getElementById('heroSvg');
+            const noise = document.getElementById('jellyNoise');
+            const rippleImageEl = document.getElementById('rippleImage');
+            if (!svg || !rippleImageEl) return;
+
+            // Offscreen canvas for ripple displacement map
+            const CW = 128, CH = 128;
+            const rippleCanvas = document.createElement('canvas');
+            rippleCanvas.width = CW;
+            rippleCanvas.height = CH;
+            const rCtx = rippleCanvas.getContext('2d');
+            const imageData = rCtx.createImageData(CW, CH);
+
+            // Ripple radius in SVG coordinate space
+            const RIPPLE_SVG_R = 200;
+
+            // Cursor tracking in SVG space
+            let mouseX = -9999, mouseY = -9999;
+            const svgPt = svg.createSVGPoint();
+            function toSVG(cx, cy) {
+                svgPt.x = cx; svgPt.y = cy;
+                try { return svgPt.matrixTransform(svg.getScreenCTM().inverse()); }
+                catch(e) { return { x: -9999, y: -9999 }; }
+            }
+
+            document.addEventListener('mousemove', (e) => {
+                const p = toSVG(e.clientX, e.clientY);
+                mouseX = p.x; mouseY = p.y;
+            });
+            document.addEventListener('mouseleave', () => { mouseX = -9999; mouseY = -9999; });
+
+            // Initialize feImage with neutral gray
+            function drawRippleMap(time) {
+                const data = imageData.data;
+                const cx = CW / 2, cy = CH / 2;
+                const maxR = CW / 2;
+
+                for (let py = 0; py < CH; py++) {
+                    for (let px = 0; px < CW; px++) {
+                        const dx = px - cx;
+                        const dy = py - cy;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        const idx = (py * CW + px) * 4;
+
+                        let dr = 0, dg = 0;
+                        if (dist < maxR && dist > 1) {
+                            const falloff = Math.pow(1 - dist / maxR, 2);
+                            const angle = Math.atan2(dy, dx);
+                            // Concentric ripple wave radiating outward
+                            const wave = Math.sin(dist * 0.25 - time * 4) * falloff;
+                            // Radial displacement (pushes along radius)
+                            dr = Math.cos(angle) * wave * 60;
+                            dg = Math.sin(angle) * wave * 60;
+                        }
+
+                        data[idx]     = 128 + dr; // R channel → x displacement
+                        data[idx + 1] = 128 + dg; // G channel → y displacement
+                        data[idx + 2] = 128;
+                        data[idx + 3] = 255;
+                    }
+                }
+
+                rCtx.putImageData(imageData, 0, 0);
+            }
+
+            let t = 0;
+            // Initial neutral frame
+            drawRippleMap(0);
+            const neutralDataURL = rippleCanvas.toDataURL();
+            rippleImageEl.setAttribute('href', neutralDataURL);
+            rippleImageEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', neutralDataURL);
+
+            setInterval(() => {
+                t += 0.033;
+
+                // Check if cursor is anywhere near the text
+                const nearText = mouseX > -200 && mouseX < 1100 && mouseY > -100 && mouseY < 300;
+
+                if (nearText) {
+                    // Position the feImage centered on cursor in SVG coordinates
+                    rippleImageEl.setAttribute('x', String(mouseX - RIPPLE_SVG_R));
+                    rippleImageEl.setAttribute('y', String(mouseY - RIPPLE_SVG_R));
+                    rippleImageEl.setAttribute('width', String(RIPPLE_SVG_R * 2));
+                    rippleImageEl.setAttribute('height', String(RIPPLE_SVG_R * 2));
+
+                    // Draw ripple pattern (always centered on canvas)
+                    drawRippleMap(t);
+                    const url = rippleCanvas.toDataURL();
+                    rippleImageEl.setAttribute('href', url);
+                    rippleImageEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', url);
+                } else {
+                    // Move off-screen when cursor is far away
+                    rippleImageEl.setAttribute('x', '-9999');
+                    rippleImageEl.setAttribute('y', '-9999');
+                }
+
+                // Gentle turbulence seed rotation for living glass texture
+                if (noise) noise.setAttribute('seed', String(Math.floor(t * 2) % 20));
+            }, 33);
+        })();
+
+        // ═══════════════════════════════════════════════════
+        // Animated grain
+        // ═══════════════════════════════════════════════════
+        (function() {
+            const turbulence = document.querySelector('#grain-filter feTurbulence');
+            if (!turbulence) return;
+            let seed = 0;
+            setInterval(() => {
+                seed = (seed + 1) % 10;
+                turbulence.setAttribute('seed', seed);
+            }, 100);
         })();
     </script>
 </body>

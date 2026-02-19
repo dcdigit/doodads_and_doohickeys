@@ -21,6 +21,124 @@
         }
         #readout span { color: #fff; font-weight: bold; }
 
+        /* Drop Zone */
+        #drop-zone {
+            position: fixed; inset: 0; z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6);
+            border: 2px dashed rgba(255,255,255,0.3);
+            margin: 20px;
+            pointer-events: none;
+        }
+        #drop-zone.active { display: flex; }
+        #drop-zone span {
+            font-family: 'Courier New', monospace; font-size: 14px;
+            color: rgba(255,255,255,0.5); letter-spacing: 2px;
+        }
+        #file-input { display: none; }
+
+        /* Patch Bay */
+        #patch-bay {
+            position: absolute; bottom: 90px; left: 30px; z-index: 20;
+            background: rgba(5,5,5,0.85); border: 1px solid #333;
+            font-family: 'Courier New', monospace; font-size: 11px; color: #a0a0a0;
+            width: 320px; user-select: none;
+        }
+        #patch-bay.minimized .pb-body { display: none; }
+        .pb-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 10px; background: #222; cursor: pointer;
+        }
+        .pb-header-left { display: flex; align-items: center; gap: 8px; }
+        .pb-title { font-size: 11px; letter-spacing: 2px; color: #a0a0a0; }
+        .pb-file-info {
+            font-size: 10px; color: #666; max-width: 120px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .pb-minimize { background: none; border: 1px solid #444; color: #888; font-family: inherit; font-size: 10px; padding: 1px 6px; cursor: pointer; }
+        .pb-minimize:hover { border-color: #666; color: #aaa; }
+        .pb-body { padding: 8px 10px; }
+
+        /* Transport */
+        .pb-transport { display: none; align-items: center; gap: 8px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #222; }
+        .pb-transport.has-audio { display: flex; }
+        .pb-play-btn {
+            background: none; border: 1px solid #444; color: #a0a0a0;
+            font-family: 'Courier New', monospace; font-size: 11px;
+            padding: 2px 8px; cursor: pointer; min-width: 28px;
+        }
+        .pb-play-btn:hover { border-color: #666; color: #fff; }
+        .pb-scrub {
+            flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+            background: #222; outline: none; cursor: pointer;
+        }
+        .pb-scrub::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 8px; height: 12px;
+            background: #666; border: none; cursor: pointer;
+        }
+        .pb-time { font-size: 10px; color: #555; min-width: 32px; text-align: right; }
+
+        /* Load prompt */
+        .pb-load-prompt {
+            text-align: center; padding: 12px 0; color: #555; cursor: pointer; font-size: 11px;
+        }
+        .pb-load-prompt:hover { color: #888; }
+
+        /* Jacks grid */
+        .pb-grid { display: none; grid-template-columns: 1fr 1fr; gap: 0; }
+        .pb-grid.has-audio { display: grid; }
+        .pb-column { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+        .pb-col-label { font-size: 9px; color: #555; letter-spacing: 1px; margin-bottom: 2px; }
+
+        .pb-jack-row { display: flex; align-items: center; gap: 6px; height: 22px; }
+        .pb-jack {
+            width: 12px; height: 12px; border-radius: 50%;
+            border: 1.5px solid #666; background: transparent;
+            cursor: pointer; flex-shrink: 0; position: relative;
+            transition: border-color 0.15s;
+        }
+        .pb-jack:hover { border-color: #aaa; }
+        .pb-jack.connected { background: currentColor; }
+        .pb-jack-label { font-size: 11px; color: #888; }
+        .pb-meter {
+            width: 40px; height: 4px; background: #111; flex-shrink: 0;
+        }
+        .pb-meter-fill { height: 100%; width: 0%; transition: width 0.05s; }
+
+        .pb-inputs .pb-jack-row { flex-direction: row; }
+        .pb-outputs .pb-jack-row { flex-direction: row-reverse; }
+        .pb-outputs .pb-jack-label { text-align: right; }
+
+        /* Connections list */
+        .pb-connections { margin-top: 6px; border-top: 1px solid #222; padding-top: 6px; }
+        .pb-conn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 3px 0; font-size: 10px;
+        }
+        .pb-conn-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .pb-conn-label { flex: 1; color: #888; }
+        .pb-conn-slider {
+            width: 50px; height: 3px; -webkit-appearance: none; appearance: none;
+            background: #222; outline: none; cursor: pointer;
+        }
+        .pb-conn-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 6px; height: 10px;
+            background: #888; border: none; cursor: pointer;
+        }
+        .pb-conn-remove {
+            background: none; border: none; color: #555; font-family: inherit;
+            font-size: 10px; cursor: pointer; padding: 0 2px;
+        }
+        .pb-conn-remove:hover { color: #f55; }
+
+        /* SVG cable layer */
+        #cable-svg {
+            position: fixed; inset: 0; z-index: 15;
+            pointer-events: none; overflow: visible;
+        }
+        #cable-svg path { pointer-events: stroke; cursor: pointer; }
+        #cable-svg path:hover { stroke-width: 3; }
+
         /* UI Styling */
         .lil-gui { 
             --width: 320px;
@@ -45,6 +163,77 @@
     </script>
 </head>
 <body>
+    <!-- Drop zone overlay -->
+    <div id="drop-zone"><span>DROP MP3 OR CLICK TO LOAD</span></div>
+    <input type="file" id="file-input" accept="audio/*">
+
+    <!-- SVG cable layer -->
+    <svg id="cable-svg"></svg>
+
+    <!-- Patch Bay -->
+    <div id="patch-bay">
+        <div class="pb-header" id="pb-header">
+            <div class="pb-header-left">
+                <span class="pb-title">PATCH BAY</span>
+                <span class="pb-file-info" id="pb-filename"></span>
+            </div>
+            <button class="pb-minimize" id="pb-minimize">_</button>
+        </div>
+        <div class="pb-body">
+            <div class="pb-transport" id="pb-transport">
+                <button class="pb-play-btn" id="pb-play">||</button>
+                <input type="range" class="pb-scrub" id="pb-scrub" min="0" max="100" value="0">
+                <span class="pb-time" id="pb-time">0:00</span>
+            </div>
+            <div class="pb-load-prompt" id="pb-load-prompt">[ drop MP3 or click to load ]</div>
+            <div class="pb-grid" id="pb-grid">
+                <div class="pb-column pb-inputs">
+                    <div class="pb-col-label">INPUTS</div>
+                    <div class="pb-jack-row" data-input="bass">
+                        <div class="pb-jack" data-jack="input" data-id="bass" style="color:#ff3366"></div>
+                        <span class="pb-jack-label">Bass</span>
+                        <div class="pb-meter"><div class="pb-meter-fill" id="meter-bass" style="background:#ff3366"></div></div>
+                    </div>
+                    <div class="pb-jack-row" data-input="mids">
+                        <div class="pb-jack" data-jack="input" data-id="mids" style="color:#ffaa00"></div>
+                        <span class="pb-jack-label">Mids</span>
+                        <div class="pb-meter"><div class="pb-meter-fill" id="meter-mids" style="background:#ffaa00"></div></div>
+                    </div>
+                    <div class="pb-jack-row" data-input="highs">
+                        <div class="pb-jack" data-jack="input" data-id="highs" style="color:#00ccff"></div>
+                        <span class="pb-jack-label">Highs</span>
+                        <div class="pb-meter"><div class="pb-meter-fill" id="meter-highs" style="background:#00ccff"></div></div>
+                    </div>
+                    <div class="pb-jack-row" data-input="volume">
+                        <div class="pb-jack" data-jack="input" data-id="volume" style="color:#aa66ff"></div>
+                        <span class="pb-jack-label">Vol</span>
+                        <div class="pb-meter"><div class="pb-meter-fill" id="meter-volume" style="background:#aa66ff"></div></div>
+                    </div>
+                </div>
+                <div class="pb-column pb-outputs">
+                    <div class="pb-col-label" style="text-align:right">OUTPUTS</div>
+                    <div class="pb-jack-row">
+                        <div class="pb-jack" data-jack="output" data-id="a" style="color:#ff3366"></div>
+                        <span class="pb-jack-label">a</span>
+                    </div>
+                    <div class="pb-jack-row">
+                        <div class="pb-jack" data-jack="output" data-id="b" style="color:#ffaa00"></div>
+                        <span class="pb-jack-label">b</span>
+                    </div>
+                    <div class="pb-jack-row">
+                        <div class="pb-jack" data-jack="output" data-id="c" style="color:#00ccff"></div>
+                        <span class="pb-jack-label">c</span>
+                    </div>
+                    <div class="pb-jack-row">
+                        <div class="pb-jack" data-jack="output" data-id="trailFade" style="color:#aa66ff"></div>
+                        <span class="pb-jack-label">Trail</span>
+                    </div>
+                </div>
+            </div>
+            <div class="pb-connections" id="pb-connections"></div>
+        </div>
+    </div>
+
     <div id="readout">
         CHAOS EQUATION: <span id="eq-name">CLIFFORD</span><br>
         POINTS: <span id="pt-count">2,000,000</span><br>
@@ -145,6 +334,11 @@
                 c += Math.cos(time * 0.3) * 0.05;
             }
 
+            // Audio reactivity offsets
+            a += (config._audioA || 0);
+            b += (config._audioB || 0);
+            c += (config._audioC || 0);
+
             for (let i = 0; i < particleCount; i++) {
                 // 1. Calculate Next Position
                 const xn = Math.sin(a * y) + c * Math.cos(a * x);
@@ -216,7 +410,7 @@
         fStyle.addColor(config, 'colorA');
         fStyle.addColor(config, 'colorB');
         fStyle.add(config, 'opacity', 0.01, 1.0).onChange(v => material.opacity = v);
-        fStyle.add(fadeMaterial, 'opacity', 0.0, 0.5).name('Trail Fade Rate');
+        fStyle.add(fadeMaterial, 'opacity', 0.0, 0.5).name('Trail Fade Rate').onChange(v => { if (typeof window._baseTrailFade !== 'undefined') window._baseTrailFade = v; });
 
         const fAnim = gui.addFolder('3. Animation');
         fAnim.add(config, 'autoMorph').name('Evolve Parameters');
@@ -259,9 +453,319 @@
             renderer.clear();
         });
 
+        // ========================================
+        // AUDIO ENGINE + PATCH BAY
+        // ========================================
+
+        // --- Audio state ---
+        let audioCtx = null;
+        let analyser = null;
+        let audioSource = null;
+        let audioElement = null;
+        let freqData = null;
+        const bands = { bass: 0, mids: 0, highs: 0, volume: 0 };
+
+        // --- Connections ---
+        const connections = []; // { id, inputId, outputId, strength, color }
+        const CABLE_COLORS = ['#ff3366','#ffaa00','#00ccff','#aa66ff','#66ff66','#ff66cc','#66ffcc','#ffcc66'];
+        let nextConnId = 0;
+
+        const OUTPUT_RANGES = {
+            a: { range: 0.5 },
+            b: { range: 0.5 },
+            c: { range: 0.5 },
+            trailFade: { range: 0.4 }
+        };
+
+        // --- DOM refs ---
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const patchBay = document.getElementById('patch-bay');
+        const pbMinimize = document.getElementById('pb-minimize');
+        const pbHeader = document.getElementById('pb-header');
+        const pbTransport = document.getElementById('pb-transport');
+        const pbPlay = document.getElementById('pb-play');
+        const pbScrub = document.getElementById('pb-scrub');
+        const pbTime = document.getElementById('pb-time');
+        const pbFilename = document.getElementById('pb-filename');
+        const pbLoadPrompt = document.getElementById('pb-load-prompt');
+        const pbGrid = document.getElementById('pb-grid');
+        const pbConnections = document.getElementById('pb-connections');
+        const cableSvg = document.getElementById('cable-svg');
+
+        // --- Minimize toggle ---
+        pbMinimize.addEventListener('click', (e) => {
+            e.stopPropagation();
+            patchBay.classList.toggle('minimized');
+            pbMinimize.textContent = patchBay.classList.contains('minimized') ? '+' : '_';
+        });
+
+        // --- File loading ---
+        function initAudio(file) {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioElement) { audioElement.pause(); audioElement.remove(); }
+
+            audioElement = new Audio();
+            audioElement.crossOrigin = 'anonymous';
+            audioElement.src = URL.createObjectURL(file);
+
+            audioSource = audioCtx.createMediaElementSource(audioElement);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 2048;
+            freqData = new Uint8Array(analyser.frequencyBinCount);
+
+            audioSource.connect(analyser);
+            analyser.connect(audioCtx.destination);
+
+            audioElement.play();
+            pbFilename.textContent = file.name;
+            pbTransport.classList.add('has-audio');
+            pbGrid.classList.add('has-audio');
+            pbLoadPrompt.style.display = 'none';
+            pbPlay.textContent = '||';
+        }
+
+        // Drag & drop
+        document.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+        document.addEventListener('dragleave', (e) => {
+            if (e.relatedTarget === null || !document.contains(e.relatedTarget)) dropZone.classList.remove('active');
+        });
+        document.addEventListener('drop', (e) => {
+            e.preventDefault(); dropZone.classList.remove('active');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('audio/')) initAudio(file);
+        });
+        // Click to load
+        pbLoadPrompt.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => { if (e.target.files[0]) initAudio(e.target.files[0]); });
+
+        // --- Transport ---
+        pbPlay.addEventListener('click', () => {
+            if (!audioElement) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioElement.paused) { audioElement.play(); pbPlay.textContent = '||'; }
+            else { audioElement.pause(); pbPlay.textContent = '>'; }
+        });
+        let scrubbing = false;
+        pbScrub.addEventListener('input', () => {
+            scrubbing = true;
+            if (audioElement && audioElement.duration) {
+                audioElement.currentTime = (pbScrub.value / 100) * audioElement.duration;
+            }
+        });
+        pbScrub.addEventListener('change', () => { scrubbing = false; });
+
+        function updateTransport() {
+            if (!audioElement || !audioElement.duration) return;
+            if (!scrubbing) pbScrub.value = (audioElement.currentTime / audioElement.duration) * 100;
+            const s = Math.floor(audioElement.currentTime);
+            pbTime.textContent = Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+            if (audioElement.paused) pbPlay.textContent = '>';
+            else pbPlay.textContent = '||';
+        }
+
+        // --- Band analysis ---
+        function updateBands() {
+            if (!analyser || !freqData) return;
+            analyser.getByteFrequencyData(freqData);
+
+            let bassSum = 0, midsSum = 0, highsSum = 0, totalSum = 0;
+            for (let i = 0; i <= 10; i++) bassSum += freqData[i];
+            for (let i = 10; i <= 80; i++) midsSum += freqData[i];
+            for (let i = 80; i <= 512; i++) highsSum += freqData[i];
+            for (let i = 0; i < freqData.length; i++) totalSum += freqData[i] * freqData[i];
+
+            bands.bass = bassSum / (11 * 255);
+            bands.mids = midsSum / (71 * 255);
+            bands.highs = highsSum / (433 * 255);
+            bands.volume = Math.sqrt(totalSum / freqData.length) / 255;
+
+            // Update meters
+            document.getElementById('meter-bass').style.width = (bands.bass * 100) + '%';
+            document.getElementById('meter-mids').style.width = (bands.mids * 100) + '%';
+            document.getElementById('meter-highs').style.width = (bands.highs * 100) + '%';
+            document.getElementById('meter-volume').style.width = (bands.volume * 100) + '%';
+        }
+
+        // --- Apply audio to attractor params ---
+        function applyAudioConnections() {
+            // Start from base config values
+            const mods = { a: 0, b: 0, c: 0, trailFade: 0 };
+            for (const conn of connections) {
+                const bandVal = bands[conn.inputId] || 0;
+                const info = OUTPUT_RANGES[conn.outputId];
+                if (!info) continue;
+                mods[conn.outputId] += bandVal * conn.strength * info.range;
+            }
+            return mods;
+        }
+
+        // --- Cable dragging ---
+        let dragging = null; // { inputId, startEl }
+        let dragLine = null;
+
+        document.querySelectorAll('.pb-jack').forEach(jack => {
+            jack.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                const type = jack.dataset.jack;
+                const id = jack.dataset.id;
+                if (type === 'input') {
+                    dragging = { inputId: id, startEl: jack };
+                    // Create temp drag line
+                    dragLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    dragLine.setAttribute('stroke', jack.style.color);
+                    dragLine.setAttribute('stroke-width', '2');
+                    dragLine.setAttribute('fill', 'none');
+                    dragLine.setAttribute('opacity', '0.6');
+                    cableSvg.appendChild(dragLine);
+                }
+            });
+
+            jack.addEventListener('mouseup', (e) => {
+                if (!dragging) return;
+                const type = jack.dataset.jack;
+                const id = jack.dataset.id;
+                if (type === 'output') {
+                    addConnection(dragging.inputId, id);
+                }
+                cancelDrag();
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!dragging || !dragLine) return;
+            const rect = dragging.startEl.getBoundingClientRect();
+            const sx = rect.left + rect.width / 2;
+            const sy = rect.top + rect.height / 2;
+            const ex = e.clientX, ey = e.clientY;
+            const cpx = (sx + ex) / 2;
+            dragLine.setAttribute('d', `M${sx},${sy} Q${cpx},${sy} ${cpx},${(sy+ey)/2} Q${cpx},${ey} ${ex},${ey}`);
+        });
+
+        document.addEventListener('mouseup', () => { if (dragging) cancelDrag(); });
+
+        function cancelDrag() {
+            if (dragLine) { dragLine.remove(); dragLine = null; }
+            dragging = null;
+        }
+
+        // --- Connection management ---
+        function addConnection(inputId, outputId) {
+            const color = CABLE_COLORS[nextConnId % CABLE_COLORS.length];
+            const conn = { id: nextConnId++, inputId, outputId, strength: 0.5, color };
+            connections.push(conn);
+            updateJackStates();
+            renderConnectionsList();
+        }
+
+        function removeConnection(id) {
+            const idx = connections.findIndex(c => c.id === id);
+            if (idx !== -1) connections.splice(idx, 1);
+            // Remove SVG cable
+            const cable = cableSvg.querySelector(`[data-conn-id="${id}"]`);
+            if (cable) cable.remove();
+            updateJackStates();
+            renderConnectionsList();
+        }
+
+        function updateJackStates() {
+            document.querySelectorAll('.pb-jack').forEach(jack => {
+                const type = jack.dataset.jack;
+                const id = jack.dataset.id;
+                const hasConn = connections.some(c =>
+                    (type === 'input' && c.inputId === id) || (type === 'output' && c.outputId === id)
+                );
+                jack.classList.toggle('connected', hasConn);
+            });
+        }
+
+        function renderConnectionsList() {
+            pbConnections.innerHTML = '';
+            if (connections.length === 0) return;
+            for (const conn of connections) {
+                const row = document.createElement('div');
+                row.className = 'pb-conn';
+                row.innerHTML = `
+                    <div class="pb-conn-dot" style="background:${conn.color}"></div>
+                    <span class="pb-conn-label">${conn.inputId} → ${conn.outputId}</span>
+                    <input type="range" class="pb-conn-slider" min="0" max="100" value="${conn.strength*100}" data-conn-id="${conn.id}">
+                    <button class="pb-conn-remove" data-conn-id="${conn.id}">x</button>
+                `;
+                pbConnections.appendChild(row);
+            }
+            // Bind events
+            pbConnections.querySelectorAll('.pb-conn-slider').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    const c = connections.find(c => c.id === parseInt(e.target.dataset.connId));
+                    if (c) c.strength = parseInt(e.target.value) / 100;
+                });
+            });
+            pbConnections.querySelectorAll('.pb-conn-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    removeConnection(parseInt(e.target.dataset.connId));
+                });
+            });
+        }
+
+        // --- Render SVG cables ---
+        function updateCables() {
+            // Remove stale cables
+            cableSvg.querySelectorAll('path[data-conn-id]').forEach(p => {
+                if (!connections.find(c => c.id === parseInt(p.dataset.connId))) p.remove();
+            });
+            for (const conn of connections) {
+                const inputJack = document.querySelector(`.pb-jack[data-jack="input"][data-id="${conn.inputId}"]`);
+                const outputJack = document.querySelector(`.pb-jack[data-jack="output"][data-id="${conn.outputId}"]`);
+                if (!inputJack || !outputJack) continue;
+                const r1 = inputJack.getBoundingClientRect();
+                const r2 = outputJack.getBoundingClientRect();
+                const sx = r1.left + r1.width/2, sy = r1.top + r1.height/2;
+                const ex = r2.left + r2.width/2, ey = r2.top + r2.height/2;
+                const cpx = (sx + ex) / 2;
+
+                let cable = cableSvg.querySelector(`path[data-conn-id="${conn.id}"]`);
+                if (!cable) {
+                    cable = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    cable.setAttribute('data-conn-id', String(conn.id));
+                    cable.setAttribute('stroke', conn.color);
+                    cable.setAttribute('stroke-width', '2');
+                    cable.setAttribute('fill', 'none');
+                    cable.setAttribute('opacity', '0.7');
+                    cable.addEventListener('click', () => removeConnection(conn.id));
+                    cableSvg.appendChild(cable);
+                }
+                cable.setAttribute('d', `M${sx},${sy} Q${cpx},${sy} ${cpx},${(sy+ey)/2} Q${cpx},${ey} ${ex},${ey}`);
+            }
+        }
+
+        // --- Modify animate() to include audio ---
+        // Store base trail fade (mutable so GUI can update it)
+        window._baseTrailFade = fadeMaterial.opacity;
+
         // Start
         renderer.clear();
         animate();
+
+        // Override animate with audio integration
+        const _origAnimate = animate;
+
+        // Redefine animate loop below — we already started it above,
+        // so we just inject the audio logic into each frame via a secondary loop.
+        (function audioLoop() {
+            requestAnimationFrame(audioLoop);
+            updateBands();
+            updateTransport();
+            updateCables();
+
+            // Apply audio modulations to config
+            const mods = applyAudioConnections();
+            // We store the audio offsets on config so updateAttractor picks them up
+            config._audioA = mods.a;
+            config._audioB = mods.b;
+            config._audioC = mods.c;
+            // Trail fade is applied directly
+            fadeMaterial.opacity = window._baseTrailFade + mods.trailFade;
+        })();
 
     </script>
 </body>
