@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG Stencil Generator</title>
+  <link rel="stylesheet" href="svg-generator-style.css">
+</head>
+<body>
+  <div class="sidebar">
+    <h1>SVG Stencil Generator</h1>
+
+    <div class="control-group">
+      <label>Seed</label>
+      <div class="seed-row">
+        <input type="text" id="seed" value="42">
+        <button id="randomize" title="Randomize seed">&#x1f3b2;</button>
+      </div>
+    </div>
+
+    <button class="export-btn primary" id="randomizeAll">Randomize All</button>
+
+    <div class="section-label">Metaballs</div>
+
+    <div class="control-group">
+      <label>Charge count <span class="val" id="chargeCountVal"></span></label>
+      <input type="range" id="chargeCount" min="5" max="50" value="18">
+    </div>
+
+    <div class="control-group">
+      <label>Charge density <span class="val" id="chargeDensityVal"></span></label>
+      <input type="range" id="chargeDensity" min="0" max="100" value="50">
+    </div>
+
+    <div class="control-group">
+      <label>Scatter seed</label>
+      <div class="seed-row">
+        <input type="text" id="scatterSeed" value="0">
+        <button id="rescatter" title="Re-roll charge positions">&#x1f3b2;</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>Min radius <span class="val" id="minRadiusVal"></span></label>
+      <input type="range" id="minRadius" min="20" max="150" value="40">
+    </div>
+
+    <div class="control-group">
+      <label>Max radius <span class="val" id="maxRadiusVal"></span></label>
+      <input type="range" id="maxRadius" min="60" max="300" value="120">
+    </div>
+
+    <div class="section-label">Fills</div>
+
+    <div class="control-group">
+      <label>Fill threshold <span class="val" id="fillThresholdVal"></span></label>
+      <input type="range" id="fillThreshold" min="30" max="150" value="80">
+    </div>
+
+    <div class="section-label">Contours</div>
+
+    <div class="control-group">
+      <label>Grid resolution <span class="val" id="gridResVal"></span></label>
+      <input type="range" id="gridRes" min="3" max="15" value="5">
+    </div>
+
+    <div class="control-group">
+      <label>Iso-levels <span class="val" id="isoLevelsVal"></span></label>
+      <input type="range" id="isoLevels" min="1" max="8" value="4">
+    </div>
+
+    <div class="control-group">
+      <label>Iso-spacing <span class="val" id="isoSpacingVal"></span></label>
+      <input type="range" id="isoSpacing" min="5" max="80" value="25">
+    </div>
+
+    <div class="section-label">Line Width</div>
+
+    <div class="control-group">
+      <label>Base width <span class="val" id="baseWidthVal"></span></label>
+      <input type="range" id="baseWidth" min="0.5" max="6" value="1.5" step="0.1">
+    </div>
+
+    <div class="control-group">
+      <label>Junction swell <span class="val" id="widthVariationVal"></span></label>
+      <input type="range" id="widthVariation" min="0" max="10" value="4" step="0.5">
+    </div>
+
+    <div class="section-label">Colors</div>
+
+    <div class="control-group">
+      <label>Background (gaps)</label>
+      <input type="color" id="bgColor" value="#4a87a8">
+    </div>
+
+    <div class="control-group">
+      <label>Fill color</label>
+      <input type="color" id="fillColor" value="#4a87a8">
+    </div>
+
+    <div class="control-group">
+      <label>Shadow color</label>
+      <input type="color" id="shadowColor" value="#1a3040">
+    </div>
+
+    <div class="control-group">
+      <label>Light color</label>
+      <input type="color" id="lightColor" value="#ffffff">
+    </div>
+
+    <div class="section-label">Shadow Layer</div>
+
+    <div class="control-group">
+      <label>Depth offset <span class="val" id="shadowDepthVal"></span></label>
+      <input type="range" id="shadowDepth" min="0" max="10" value="3" step="0.5">
+    </div>
+
+    <div class="control-group">
+      <label>Blur <span class="val" id="shadowBlurVal"></span></label>
+      <input type="range" id="shadowBlur" min="0" max="8" value="1.5" step="0.5">
+    </div>
+
+    <div class="control-group">
+      <label>Opacity <span class="val" id="shadowOpacityVal"></span></label>
+      <input type="range" id="shadowOpacity" min="10" max="100" value="55">
+    </div>
+
+    <div class="section-label">Light Layer</div>
+
+    <div class="control-group">
+      <label>Offset <span class="val" id="lightOffsetVal"></span></label>
+      <input type="range" id="lightOffset" min="0" max="6" value="1.5" step="0.5">
+    </div>
+
+    <div class="control-group">
+      <label>Opacity <span class="val" id="lightOpacityVal"></span></label>
+      <input type="range" id="lightOpacity" min="10" max="100" value="75">
+    </div>
+
+    <div class="section-label">Canvas</div>
+
+    <div class="size-row">
+      <div class="control-group">
+        <label>Width</label>
+        <input type="number" id="canvasWidth" min="400" max="3000" value="800">
+      </div>
+      <div class="control-group">
+        <label>Height</label>
+        <input type="number" id="canvasHeight" min="400" max="2000" value="600">
+      </div>
+    </div>
+
+    <div class="section-label">Export Combined</div>
+    <button class="export-btn primary" id="exportSVG">Export SVG</button>
+    <button class="export-btn" id="exportPNG">Export PNG</button>
+
+    <div class="section-label">Export Fill Layer</div>
+    <button class="export-btn" id="exportFillSVG">Fill SVG</button>
+    <button class="export-btn" id="exportFillPNG">Fill PNG</button>
+
+    <div class="section-label">Export Shadow Layer</div>
+    <button class="export-btn" id="exportShadowSVG">Shadow SVG</button>
+    <button class="export-btn" id="exportShadowPNG">Shadow PNG</button>
+
+    <div class="section-label">Export Light Layer</div>
+    <button class="export-btn" id="exportLightSVG">Light SVG</button>
+    <button class="export-btn" id="exportLightPNG">Light PNG</button>
+  </div>
+
+  <div class="preview" id="preview"></div>
+
+  <script src="generator.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>

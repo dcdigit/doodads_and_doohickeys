@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sylvan Cummings — Creative Technologist & Industrial Designer</title>
+    <meta name="description" content="Portfolio of Sylvan Cummings — creative technologist and industrial designer. Generative art, WebGL experiments, furniture design, and ceramics.">
+    <meta property="og:title" content="Sylvan Cummings — Creative Technologist & Industrial Designer">
+    <meta property="og:description" content="Generative art, creative tools, industrial design, and ceramics.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="thumbnails/smoke.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -19,6 +24,10 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
+
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        .skip-link { position: absolute; top: -100%; left: 1rem; padding: 0.5em 1em; background: var(--text); color: var(--bg); font-size: 0.8rem; z-index: 10000; text-decoration: none; }
+        .skip-link:focus { top: 1rem; }
 
         body {
             font-family: 'DM Mono', monospace;
@@ -54,24 +63,16 @@
 
         .hero-title {
             display: block;
-            width: 70%;
-            margin-bottom: 1.5rem;
+            width: 90%;
+            margin: 0 auto 1.5rem;
             overflow: visible;
             cursor: default;
             user-select: none;
         }
 
-        .hero-title text {
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            text-transform: uppercase;
-            fill: var(--text);
-            filter: url(#glass);
-        }
-
-        .hero-title text:last-of-type {
-            fill: var(--accent);
-        }
+        .hero-title .np { filter: url(#glass); }
+        .hero-title .np-sylvan { fill: var(--text); stroke: none; }
+        .hero-title .np-cummings { fill: var(--accent); stroke: none; }
 
         .hero-meta {
             display: flex;
@@ -373,6 +374,8 @@
     </style>
 </head>
 <body>
+    <a href="#directory" class="skip-link">Skip to projects</a>
+    <h1 class="sr-only">Sylvan Cummings — Creative Technologist & Industrial Designer</h1>
 
     <!-- Film grain -->
     <div class="grain" aria-hidden="true">
@@ -387,38 +390,30 @@
 
     <!-- Hero -->
     <section class="hero">
-        <svg class="hero-title" id="heroSvg" viewBox="0 0 1100 280" xmlns="http://www.w3.org/2000/svg" aria-label="Sylvan Cummings">
+        <svg class="hero-title" id="heroSvg" viewBox="0 0 1776.6 714.87" xmlns="http://www.w3.org/2000/svg" aria-label="Sylvan Cummings">
             <defs>
                 <filter id="glass" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
-                    <!-- Cursor ripple: canvas-driven displacement map -->
-                    <feFlood flood-color="rgb(128,128,128)" flood-opacity="1" result="neutral"/>
-                    <feImage id="rippleImage" preserveAspectRatio="none" result="rippleLocal"/>
-                    <feComposite in="rippleLocal" in2="neutral" operator="over" result="rippleMap"/>
-                    <feDisplacementMap in="SourceGraphic" in2="rippleMap" scale="30" xChannelSelector="R" yChannelSelector="G" result="rippled"/>
-                    <feDisplacementMap in="SourceAlpha" in2="rippleMap" scale="30" xChannelSelector="R" yChannelSelector="G" result="rippledAlpha"/>
-
-                    <!-- Glass texture: constant subtle turbulence -->
                     <feTurbulence id="jellyNoise" type="turbulence" baseFrequency="0.012 0.010" numOctaves="2" seed="3" result="noise"/>
-                    <feDisplacementMap id="jellyDisplace" in="rippled" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warped"/>
-                    <feDisplacementMap in="rippledAlpha" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
+                    <feDisplacementMap id="jellyDisplace" in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" result="warped"/>
+                    <feDisplacementMap id="jellyDisplaceAlpha" in="SourceAlpha" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" result="warpedAlpha"/>
 
-                    <feMorphology in="warpedAlpha" operator="dilate" radius="1" result="fat"/>
-                    <feGaussianBlur in="fat" stdDeviation="2.5" result="rounded"/>
+                    <feMorphology in="warpedAlpha" operator="dilate" radius="2" result="fat"/>
+                    <feGaussianBlur in="fat" stdDeviation="4" result="rounded"/>
                     <feComponentTransfer in="rounded" result="mask">
                         <feFuncA type="table" tableValues="0 0 0 0 0 1 1 1 1"/>
                     </feComponentTransfer>
                     <feFlood flood-color="rgba(26,23,20,0.06)" result="tint"/>
                     <feComposite in="tint" in2="mask" operator="in" result="body"/>
-                    <feGaussianBlur in="mask" stdDeviation="1.5" result="edgeMap"/>
+                    <feGaussianBlur in="mask" stdDeviation="3" result="edgeMap"/>
                     <feSpecularLighting in="edgeMap" surfaceScale="2" specularConstant="0.6" specularExponent="50" result="highlight">
-                        <fePointLight x="-150" y="-150" z="400"/>
+                        <fePointLight x="-250" y="-250" z="600"/>
                     </feSpecularLighting>
                     <feComposite in="highlight" in2="mask" operator="in" result="hlMasked"/>
                     <feComponentTransfer in="hlMasked" result="hlFaded">
                         <feFuncA type="linear" slope="0.35" intercept="0"/>
                     </feComponentTransfer>
                     <feSpecularLighting in="edgeMap" surfaceScale="1.5" specularConstant="0.3" specularExponent="40" result="shadow">
-                        <fePointLight x="600" y="500" z="200"/>
+                        <fePointLight x="1000" y="800" z="350"/>
                     </feSpecularLighting>
                     <feComposite in="shadow" in2="mask" operator="in" result="shMasked"/>
                     <feComponentTransfer in="shMasked" result="shFaded">
@@ -432,22 +427,78 @@
                     </feMerge>
                 </filter>
             </defs>
-            <text x="0" y="120" font-size="148" letter-spacing="-6">SYLVAN</text>
-            <text x="0" y="260" font-size="148" letter-spacing="-6">CUMMINGS</text>
+            <g class="np">
+                <rect class="np-sylvan" x="168.39" y="71.65" width="137.33" height="66.61" transform="translate(17.38 242.62) rotate(-55.96)"/>
+                <rect class="np-sylvan" x="192.24" y="177.19" width="136.23" height="66.61" transform="translate(-59.82 308.38) rotate(-55.96)"/>
+                <path class="np-cummings" d="m193.19,469.6h85.76c13.74,0,24.9,11.16,24.9,24.9v41.7h-110.66v-66.61h0Z" transform="translate(-307.32 427.28) rotate(-55.96)"/>
+                <path class="np-cummings" d="m295.19,469.6h87.94c12.54,0,22.72,10.18,22.72,22.72v43.89h-110.66v-66.61h0Z" transform="translate(-262.42 511.79) rotate(-55.96)"/>
+                <rect class="np-cummings" x="189.65" y="298.19" width="110.94" height="66.61" transform="translate(227.6 -80.41) rotate(34.04)"/>
+                <rect class="np-sylvan" x="276.39" y="53.65" width="137.33" height="66.61" rx="20" ry="20" transform="translate(79.83 324.18) rotate(-55.96)"/>
+                <rect class="np-sylvan" x="85.39" y="196.65" width="137.33" height="66.61" rx="20" ry="20" transform="translate(-122.73 228.86) rotate(-55.96)"/>
+                <rect class="np-sylvan" x="217.93" y="65.11" width="146.58" height="62.2" transform="translate(478.65 338.97) rotate(-145.96)"/>
+                <rect class="np-sylvan" x="135.52" y="189.27" width="143.24" height="61.1" transform="translate(255.71 517.93) rotate(-145.96)"/>
+                <rect class="np-sylvan" x="341.09" y="227.11" width="56" height="62.2" transform="translate(738.19 516.42) rotate(180)"/>
+                <rect class="np-sylvan" x="622.93" y="224.5" width="100.17" height="57.81" transform="translate(1346.02 506.81) rotate(180)"/>
+                <rect class="np-cummings" x="244.93" y="509.5" width="102.17" height="57.81" transform="translate(592.02 1076.81) rotate(180)"/>
+                <rect class="np-cummings" x="55.09" y="509.5" width="97" height="57.81" transform="translate(207.19 1076.81) rotate(180)"/>
+                <rect class="np-cummings" x="454.93" y="430.5" width="102.17" height="57.81" transform="translate(1012.02 918.81) rotate(180)"/>
+                <rect class="np-cummings" x="573.93" y="431.5" width="102.17" height="57.81" transform="translate(1250.02 920.81) rotate(180)"/>
+                <rect class="np-sylvan" x="843.09" y="113.5" width="112" height="58.81" rx="15.52" ry="15.52" transform="translate(1798.19 285.81) rotate(180)"/>
+                <rect class="np-sylvan" x="831.93" y="191.5" width="95.17" height="58.81" transform="translate(1759.02 441.81) rotate(180)"/>
+                <path class="np-sylvan" d="m276.43,167.56h148.61c11.21,0,20.31,9.1,20.31,20.31v46.3h-168.92v-66.61h0Z" transform="translate(-7.59 387.45) rotate(-55.96)"/>
+                <path class="np-sylvan" d="m206.14,253.77h357.37c10.84,0,19.64,8.8,19.64,19.64v46.97H206.14v-66.61h0Z" transform="translate(-64.16 453.36) rotate(-55.96)"/>
+                <path class="np-sylvan" d="m442.02,124.68h244.97c12.8,0,23.2,10.39,23.2,23.2v43.41h-268.17v-66.61h0Z" transform="translate(122.67 546.9) rotate(-55.96)"/>
+                <path class="np-cummings" d="m-46.15,376.39h308.41c14.71,0,26.65,11.94,26.65,26.65v39.95H-46.15v-66.61h0Z" transform="translate(-286.05 280.91) rotate(-55.96)"/>
+                <path class="np-cummings" d="m103.29,475.11h70.13c14.71,0,26.65,11.94,26.65,26.65v39.95h-96.79v-66.61h0Z" transform="translate(-354.51 349.47) rotate(-55.96)"/>
+                <rect class="np-cummings" x="174.29" y="371.11" width="96.79" height="66.61" transform="translate(-237.08 362.53) rotate(-55.96)"/>
+                <path class="np-sylvan" d="m559.62,162.22h142.62c12.62,0,22.87,10.25,22.87,22.87v43.73h-165.49v-66.61h0Z" transform="translate(120.73 618.33) rotate(-55.96)"/>
+                <path class="np-sylvan" d="m658.62,162.22h142.52c12.68,0,22.97,10.29,22.97,22.97v43.63h-165.49v-66.61h0Z" transform="translate(164.31 700.36) rotate(-55.96)"/>
+                <path class="np-cummings" d="m373.62,448.22h140.73c13.67,0,24.76,11.1,24.76,24.76v41.84h-165.49v-66.61h0Z" transform="translate(-198.12 590.09) rotate(-55.96)"/>
+                <path class="np-cummings" d="m467.62,450.22h143.59c12.09,0,21.9,9.82,21.9,21.9v44.7h-165.49v-66.61h0Z" transform="translate(-158.4 668.86) rotate(-55.96)"/>
+                <path class="np-cummings" d="m561.62,450.22h143.81c11.97,0,21.68,9.71,21.68,21.68v44.93h-165.49v-66.61h0Z" transform="translate(-117.02 746.75) rotate(-55.96)"/>
+                <path class="np-cummings" d="m655.62,450.22h142.17c12.87,0,23.32,10.45,23.32,23.32v43.28h-165.49v-66.61h0Z" transform="translate(-75.65 824.64) rotate(-55.96)"/>
+                <path class="np-cummings" d="m749.62,449.22h145.41c11.09,0,20.09,9,20.09,20.09v46.52h-165.49v-66.61h0Z" transform="translate(-33.45 902.09) rotate(-55.96)"/>
+                <path class="np-cummings" d="m843.62,449.22h142.92c12.46,0,22.57,10.11,22.57,22.57v44.03h-165.49v-66.61h0Z" transform="translate(7.93 979.98) rotate(-55.96)"/>
+                <path class="np-cummings" d="m937.62,449.22h144.35c11.67,0,21.14,9.47,21.14,21.14v45.46h-165.49v-66.61h0Z" transform="translate(49.3 1057.86) rotate(-55.96)"/>
+                <path class="np-cummings" d="m1061.47,337.34h43.46c12.58,0,22.79,10.21,22.79,22.79v43.82h-66.24v-66.61h0Z" transform="translate(174.68 1070.12) rotate(-55.96)"/>
+                <rect class="np-cummings" x="1185.47" y="600.34" width="66.24" height="66.61" transform="translate(11.33 1288.62) rotate(-55.96)"/>
+                <rect class="np-cummings" x="1423.3" y="482.73" width="85.73" height="66.61" transform="translate(217.76 1442) rotate(-55.96)"/>
+                <rect class="np-cummings" x="1476.94" y="503.94" width="86.17" height="31.31" transform="translate(2488.64 1801.1) rotate(-145.96)"/>
+                <rect class="np-cummings" x="1522.25" y="433.93" width="86.17" height="32.4" transform="translate(2610.37 1699.46) rotate(-145.96)"/>
+                <path class="np-cummings" d="m1481.55,407.75h48.49c12.59,0,22.81,10.22,22.81,22.81v43.79h-71.3v-66.61h0Z" transform="translate(302.35 1451.28) rotate(-55.96)"/>
+                <rect class="np-cummings" x="1522.55" y="487.75" width="71.3" height="66.61" transform="translate(254.11 1520.47) rotate(-55.96)"/>
+                <path class="np-cummings" d="m1564.3,412.73h63.29c12.38,0,22.43,10.05,22.43,22.43v44.17h-85.73v-66.61h0Z" transform="translate(337.82 1528.02) rotate(-55.96)"/>
+                <rect class="np-sylvan" x="748.62" y="167.22" width="165.49" height="66.61" rx="10.13" ry="10.13" transform="translate(199.78 777.13) rotate(-55.96)"/>
+                <path class="np-sylvan" d="m842.62,167.22h160.33c2.85,0,5.17,2.32,5.17,5.17v61.44h-165.49v-66.61h0Z" transform="translate(241.15 855.02) rotate(-55.96)"/>
+                <path class="np-cummings" d="m1317.76,396.5h100.66c2.03,0,3.67,1.64,3.67,3.67v42.14c0,7.17-5.82,13-13,13h-85.37c-5.31,0-9.63-4.31-9.63-9.63v-45.51c0-2.03,1.64-3.67,3.67-3.67Z" transform="translate(2736.19 851.81) rotate(180)"/>
+                <rect class="np-cummings" x="1281.93" y="511.5" width="95.17" height="58.81" transform="translate(2659.02 1081.81) rotate(180)"/>
+                <path class="np-cummings" d="m1218.62,450.22h157.81c4.24,0,7.68,3.44,7.68,7.68v58.93h-165.49v-66.61h0Z" transform="translate(172.16 1291.14) rotate(-55.96)"/>
+                <path class="np-cummings" d="m1176.81,522.04h335.04c2.77,0,5.02,2.25,5.02,5.02v61.59h-340.06v-66.61h0Z" transform="translate(132.67 1360.43) rotate(-55.96)"/>
+                <rect class="np-sylvan" x="1038.93" y="146.5" width="95.17" height="58.81" transform="translate(2173.02 351.81) rotate(180)"/>
+                <path class="np-sylvan" d="m935.62,166.22h145.11c11.25,0,20.39,9.14,20.39,20.39v46.22h-165.49v-66.61h0Z" transform="translate(282.92 931.64) rotate(-55.96)"/>
+                <path class="np-sylvan" d="m1029.62,166.22h145.89c10.82,0,19.6,8.78,19.6,19.6v47.01h-165.49v-66.61h0Z" transform="translate(324.29 1009.53) rotate(-55.96)"/>
+                <rect class="np-cummings" x="1133.93" y="427.5" width="95.17" height="58.81" transform="translate(2363.02 913.81) rotate(180)"/>
+                <path class="np-cummings" d="m1030.62,447.22h143.45c12.17,0,22.05,9.88,22.05,22.05v44.56h-165.49v-66.61h0Z" transform="translate(91.9 1134.04) rotate(-55.96)"/>
+                <path class="np-cummings" d="m1124.62,447.22h141.49c13.25,0,24.01,10.76,24.01,24.01v42.6h-165.49v-66.61h0Z" transform="translate(133.27 1211.93) rotate(-55.96)"/>
+                <rect class="np-cummings" x="738" y="431.45" width="102.17" height="57.81" transform="translate(1578.17 920.71) rotate(180)"/>
+                <rect class="np-cummings" x="857" y="432.45" width="102.17" height="57.81" transform="translate(1816.17 922.71) rotate(180)"/>
+            </g>
         </svg>
         <div class="hero-meta">
-            <p class="hero-subtitle">Media explorations and Artistic demonstrations.</p>
+            <p class="hero-subtitle">Creative technologist and industrial designer building at the intersection of code, physical form, and craft.</p>
             <div class="hero-links">
+                <a href="Sylvan_Cummings_Resume.pdf" target="_blank">Resume</a>
                 <a href="https://github.com/sylvan-cu" target="_blank" rel="noopener">GitHub</a>
                 <a href="https://www.linkedin.com/in/sylvan-cummings-a2a645247" target="_blank" rel="noopener">LinkedIn</a>
                 <a href="mailto:sylvancummings@gmail.com">Email</a>
+                <a href="shop.html">Shop</a>
             </div>
         </div>
         <span class="scroll-cue">Scroll</span>
     </section>
 
     <!-- Filter bar -->
-    <nav class="filter-bar" id="filterBar">
+    <nav class="filter-bar" id="filterBar" aria-label="Project filters">
         <span class="filter-label">Filter</span>
         <button class="filter-btn" data-filter="generative">Generative Art</button>
         <button class="filter-btn" data-filter="tools">Creative Tools</button>
@@ -456,6 +507,8 @@
 
     <!-- Directory listing -->
     <section class="directory" id="directory">
+
+        <div class="section-label" data-category="generative">Creative Code</div>
 
         <a href="smoke.html" class="project-row" data-category="generative" data-img="thumbnails/smoke.webp">
             <span class="row-num">01</span>
@@ -541,6 +594,8 @@
             </div></div>
         </a>
 
+        <div class="section-label" data-category="tools">Creative Tools</div>
+
         <a href="LiquidTiles.html" class="project-row" data-category="tools" data-img="thumbnails/LiquidTiles.webp">
             <span class="row-num">08</span>
             <div class="row-content">
@@ -577,11 +632,34 @@
             </div></div>
         </a>
 
+        <a href="FontForge.html" class="project-row" data-category="tools" data-img="thumbnails/FontForge.webp">
+            <span class="row-num">11</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Liquid Font">Liquid Font</h2>
+                <p class="row-desc">Generative font tool — sculpt type with cursor-proximity distortion, displacement, roughen, and weight controls, then export a real .otf file.</p>
+            </div>
+            <span class="row-tag">Tools</span>
+            <div class="row-expand"><div class="row-expand-inner">
+                <img class="row-preview-img" src="thumbnails/FontForge.webp" alt="" loading="lazy">
+            </div></div>
+        </a>
+
+        <a href="svg-generator.html" class="project-row" data-category="tools" data-img="">
+            <span class="row-num">12</span>
+            <div class="row-content">
+                <h2 class="row-title" data-text="Ripple">Ripple</h2>
+                <p class="row-desc">Procedural SVG stencil generator — metaball contour fields with multi-layer export, shadow/light ribbons, and seeded randomization.</p>
+            </div>
+            <span class="row-tag">Tools</span>
+            <div class="row-expand"><div class="row-expand-inner">
+            </div></div>
+        </a>
+
         <!-- Industrial Design -->
         <div class="section-label" data-category="physical">Industrial Design</div>
 
         <a href="cove-chair.html" class="project-row" data-category="physical" data-img="thumbnails/covechair.webp">
-            <span class="row-num">11</span>
+            <span class="row-num">13</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Cove Lounge Chair">Cove Lounge Chair</h2>
                 <p class="row-desc">Work-from-home lounge chair. Triangular bent plywood base, dual armrest surfaces. Collaborative project — SolidWorks, physical prototyping.</p>
@@ -593,7 +671,7 @@
         </a>
 
         <a href="prism-truck.html" class="project-row" data-category="physical" data-img="thumbnails/prism.webp">
-            <span class="row-num">12</span>
+            <span class="row-num">14</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Prism Electric Truck">Prism Electric Truck</h2>
                 <p class="row-desc">Battery-electric Class 7-8 commercial vehicle concept. Hexagonal-prism cabin, chassis-integrated battery packs. SolidWorks, KeyShot rendering.</p>
@@ -605,7 +683,7 @@
         </a>
 
         <a href="geometric-stool.html" class="project-row" data-category="physical" data-img="thumbnails/stoolhero.webp">
-            <span class="row-num">13</span>
+            <span class="row-num">15</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Geometric Stool">Geometric Stool</h2>
                 <p class="row-desc">Oak seat on sculptural black steel base. Intersecting planes for structural rigidity. CNC milling, welding, hand finishing.</p>
@@ -617,7 +695,7 @@
         </a>
 
         <a href="waste-chair.html" class="project-row" data-category="physical" data-img="thumbnails/wastechair.webp">
-            <span class="row-num">14</span>
+            <span class="row-num">16</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Waste Chair">Waste Chair</h2>
                 <p class="row-desc">Chair built entirely from discarded materials — woven inner tubes on welded scrap-metal frame. MIG welding, material reclamation.</p>
@@ -629,7 +707,7 @@
         </a>
 
         <a href="grid-switch.html" class="project-row" data-category="physical" data-img="thumbnails/gridswitch.webp">
-            <span class="row-num">15</span>
+            <span class="row-num">17</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Grid Switch">Grid Switch</h2>
                 <p class="row-desc">Reimagined light switch — 3x3 grid of tactile rocker tiles replacing the standard toggle. SolidWorks, injection mold design.</p>
@@ -641,7 +719,7 @@
         </a>
 
         <a href="sunrise-mechanism.html" class="project-row" data-category="physical" data-img="thumbnails/mechanism.webp">
-            <span class="row-num">16</span>
+            <span class="row-num">18</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Sunrise Mechanism">Sunrise Mechanism</h2>
                 <p class="row-desc">Lamp adjustment mechanism with ball joint and threaded rod. Designed for injection molding. SolidWorks, GD&T tolerancing.</p>
@@ -656,7 +734,7 @@
         <div class="section-label" data-category="physical">Ceramics</div>
 
         <a href="patterned-cups.html" class="project-row" data-category="physical" data-img="photos/patterned-cups-stack.jpg">
-            <span class="row-num">17</span>
+            <span class="row-num">19</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Patterned Cups">Patterned Cups</h2>
                 <p class="row-desc">Stackable tumblers with bold wax-resist glaze patterns. Four colorways designed to nest with continuous pattern flow.</p>
@@ -668,7 +746,7 @@
         </a>
 
         <a href="altered-vase.html" class="project-row" data-category="physical" data-img="photos/altered-vase.jpg">
-            <span class="row-num">18</span>
+            <span class="row-num">20</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Altered Vase">Altered Vase</h2>
                 <p class="row-desc">Wheel-thrown cylinder with pressed indentations filled with glossy red glaze. Stoneware, high-fire reduction.</p>
@@ -680,7 +758,7 @@
         </a>
 
         <a href="bottle-vases.html" class="project-row" data-category="physical" data-img="photos/bottle-trio.jpg">
-            <span class="row-num">19</span>
+            <span class="row-num">21</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Bottle Vases">Bottle Vases</h2>
                 <p class="row-desc">Angular bottle-form vases with cinched waists and flared rims. Green celadon to black tenmoku glaze series.</p>
@@ -692,7 +770,7 @@
         </a>
 
         <a href="reactive-glaze-bowl.html" class="project-row" data-category="physical" data-img="thumbnails/bowlblue.webp">
-            <span class="row-num">20</span>
+            <span class="row-num">22</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Reactive Glaze Bowl">Reactive Glaze Bowl</h2>
                 <p class="row-desc">Wheel-thrown ceramic with reactive blue glaze. Unpredictable pooling and breaking patterns from high-fire reduction.</p>
@@ -704,7 +782,7 @@
         </a>
 
         <a href="VaseGenerator.html" class="project-row" data-category="tools" data-img="thumbnails/VaseGenerator.webp">
-            <span class="row-num">21</span>
+            <span class="row-num">23</span>
             <div class="row-content">
                 <h2 class="row-title" data-text="Vase Generator">Vase Generator</h2>
                 <p class="row-desc">Parametric 3D vase modeler with adjustable curvature, line count, and shell opacity. Three.js with auto-rotation.</p>
@@ -719,10 +797,12 @@
 
     <footer>
         <span class="footer-copy">&copy; 2026 Sylvan Cummings</span>
-        <nav class="footer-nav">
+        <nav class="footer-nav" aria-label="Social links">
+            <a href="Sylvan_Cummings_Resume.pdf" target="_blank">Resume</a>
             <a href="https://github.com/sylvan-cu" target="_blank" rel="noopener">GitHub</a>
             <a href="https://www.linkedin.com/in/sylvan-cummings-a2a645247" target="_blank" rel="noopener">LinkedIn</a>
             <a href="mailto:sylvancummings@gmail.com">Email</a>
+            <a href="shop.html">Shop</a>
         </nav>
     </footer>
 
@@ -839,14 +919,16 @@
             const allFilterable = document.querySelectorAll('[data-category]');
 
             btns.forEach(btn => {
+                btn.setAttribute('aria-pressed', 'false');
                 btn.addEventListener('click', () => {
                     const wasActive = btn.classList.contains('active');
-                    btns.forEach(b => b.classList.remove('active'));
+                    btns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
 
                     if (wasActive) {
                         allFilterable.forEach(el => el.classList.remove('hidden'));
                     } else {
                         btn.classList.add('active');
+                        btn.setAttribute('aria-pressed', 'true');
                         const filter = btn.dataset.filter;
                         allFilterable.forEach(el => {
                             if (el.dataset.category === filter) {
@@ -863,28 +945,24 @@
         })();
 
         // ═══════════════════════════════════════════════════
-        // Jelly text — localized cursor ripple (shape distortion)
+        // Jelly text — cursor-proximity glass distortion
         // ═══════════════════════════════════════════════════
         (function() {
             const svg = document.getElementById('heroSvg');
             const noise = document.getElementById('jellyNoise');
-            const rippleImageEl = document.getElementById('rippleImage');
-            if (!svg || !rippleImageEl) return;
+            const displace = document.getElementById('jellyDisplace');
+            const displaceAlpha = document.getElementById('jellyDisplaceAlpha');
+            if (!svg || !displace) return;
 
-            // Offscreen canvas for ripple displacement map
-            const CW = 128, CH = 128;
-            const rippleCanvas = document.createElement('canvas');
-            rippleCanvas.width = CW;
-            rippleCanvas.height = CH;
-            const rCtx = rippleCanvas.getContext('2d');
-            const imageData = rCtx.createImageData(CW, CH);
+            const BASE_SCALE = 3;
+            const MAX_SCALE = 15;
+            const LERP_SPEED = 0.05;
 
-            // Ripple radius in SVG coordinate space
-            const RIPPLE_SVG_R = 200;
-
-            // Cursor tracking in SVG space
-            let mouseX = -9999, mouseY = -9999;
+            // Cursor tracking in SVG space with lerp
+            let targetX = -9999, targetY = -9999;
+            let smoothX = -9999, smoothY = -9999;
             const svgPt = svg.createSVGPoint();
+
             function toSVG(cx, cy) {
                 svgPt.x = cx; svgPt.y = cy;
                 try { return svgPt.matrixTransform(svg.getScreenCTM().inverse()); }
@@ -893,78 +971,48 @@
 
             document.addEventListener('mousemove', (e) => {
                 const p = toSVG(e.clientX, e.clientY);
-                mouseX = p.x; mouseY = p.y;
+                targetX = p.x; targetY = p.y;
             });
-            document.addEventListener('mouseleave', () => { mouseX = -9999; mouseY = -9999; });
-
-            // Initialize feImage with neutral gray
-            function drawRippleMap(time) {
-                const data = imageData.data;
-                const cx = CW / 2, cy = CH / 2;
-                const maxR = CW / 2;
-
-                for (let py = 0; py < CH; py++) {
-                    for (let px = 0; px < CW; px++) {
-                        const dx = px - cx;
-                        const dy = py - cy;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        const idx = (py * CW + px) * 4;
-
-                        let dr = 0, dg = 0;
-                        if (dist < maxR && dist > 1) {
-                            const falloff = Math.pow(1 - dist / maxR, 2);
-                            const angle = Math.atan2(dy, dx);
-                            // Concentric ripple wave radiating outward
-                            const wave = Math.sin(dist * 0.25 - time * 4) * falloff;
-                            // Radial displacement (pushes along radius)
-                            dr = Math.cos(angle) * wave * 60;
-                            dg = Math.sin(angle) * wave * 60;
-                        }
-
-                        data[idx]     = 128 + dr; // R channel → x displacement
-                        data[idx + 1] = 128 + dg; // G channel → y displacement
-                        data[idx + 2] = 128;
-                        data[idx + 3] = 255;
-                    }
-                }
-
-                rCtx.putImageData(imageData, 0, 0);
-            }
+            document.addEventListener('mouseleave', () => { targetX = -9999; targetY = -9999; });
 
             let t = 0;
-            // Initial neutral frame
-            drawRippleMap(0);
-            const neutralDataURL = rippleCanvas.toDataURL();
-            rippleImageEl.setAttribute('href', neutralDataURL);
-            rippleImageEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', neutralDataURL);
+            let currentScale = BASE_SCALE;
 
-            setInterval(() => {
+            function jellyLoop() {
+                requestAnimationFrame(jellyLoop);
                 t += 0.033;
 
-                // Check if cursor is anywhere near the text
-                const nearText = mouseX > -200 && mouseX < 1100 && mouseY > -100 && mouseY < 300;
-
-                if (nearText) {
-                    // Position the feImage centered on cursor in SVG coordinates
-                    rippleImageEl.setAttribute('x', String(mouseX - RIPPLE_SVG_R));
-                    rippleImageEl.setAttribute('y', String(mouseY - RIPPLE_SVG_R));
-                    rippleImageEl.setAttribute('width', String(RIPPLE_SVG_R * 2));
-                    rippleImageEl.setAttribute('height', String(RIPPLE_SVG_R * 2));
-
-                    // Draw ripple pattern (always centered on canvas)
-                    drawRippleMap(t);
-                    const url = rippleCanvas.toDataURL();
-                    rippleImageEl.setAttribute('href', url);
-                    rippleImageEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', url);
+                // Smooth cursor tracking (lerp)
+                if (targetX < -5000) {
+                    smoothX += (targetX - smoothX) * 0.3;
+                    smoothY += (targetY - smoothY) * 0.3;
                 } else {
-                    // Move off-screen when cursor is far away
-                    rippleImageEl.setAttribute('x', '-9999');
-                    rippleImageEl.setAttribute('y', '-9999');
+                    smoothX += (targetX - smoothX) * LERP_SPEED;
+                    smoothY += (targetY - smoothY) * LERP_SPEED;
                 }
 
+                // Calculate proximity to SVG center (960, 540)
+                const nearText = smoothX > -200 && smoothX < 2000 && smoothY > -100 && smoothY < 900;
+                let targetScale = BASE_SCALE;
+
+                if (nearText) {
+                    const dx = smoothX - 888;
+                    const dy = smoothY - 357;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const proximity = Math.max(0, 1 - dist / 900);
+                    targetScale = BASE_SCALE + proximity * (MAX_SCALE - BASE_SCALE);
+                }
+
+                // Smooth the scale transition
+                currentScale += (targetScale - currentScale) * 0.08;
+                const s = String(Math.round(currentScale * 10) / 10);
+                displace.setAttribute('scale', s);
+                if (displaceAlpha) displaceAlpha.setAttribute('scale', s);
+
                 // Gentle turbulence seed rotation for living glass texture
-                if (noise) noise.setAttribute('seed', String(Math.floor(t * 2) % 20));
-            }, 33);
+                if (noise) noise.setAttribute('seed', String(Math.floor(t * 0.6) % 20));
+            }
+            requestAnimationFrame(jellyLoop);
         })();
 
         // ═══════════════════════════════════════════════════
@@ -980,5 +1028,6 @@
             }, 100);
         })();
     </script>
+    <script src="editor.js"></script>
 </body>
 </html>

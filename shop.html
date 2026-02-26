@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ceramics Shop — Sylvan Cummings</title>
+    <meta name="description" content="Handmade ceramic pieces by Sylvan Cummings — cups, vases, and bowls. Wheel-thrown stoneware with unique glazes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #c9b49a;
+            --bg-light: #d4c0a8;
+            --bg-dark: #a89070;
+            --text: #2a2118;
+            --muted: #6b5d4e;
+            --accent: #d63200;
+            --rule: rgba(42, 33, 24, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Craft paper background with lighting gradient ── */
+        .paper-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse 120% 80% at 50% 15%, var(--bg-light) 0%, transparent 60%),
+                radial-gradient(ellipse 100% 60% at 50% 100%, var(--bg-dark) 0%, transparent 50%),
+                linear-gradient(180deg, var(--bg-light) 0%, var(--bg) 40%, var(--bg-dark) 100%);
+        }
+
+        /* ── Film grain (heavier for paper texture) ── */
+        .grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.5;
+            mix-blend-mode: multiply;
+        }
+        .grain svg { width: 100%; height: 100%; }
+
+        /* ── Back nav ── */
+        .back-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.9rem clamp(1.5rem, 4vw, 4rem);
+            border-bottom: 1px solid var(--rule);
+            font-size: 0.75rem;
+        }
+
+        .back-nav a {
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .back-nav a:hover { color: var(--text); }
+        .back-nav .back-arrow { font-size: 0.9rem; }
+        .back-nav .back-title { color: var(--text); letter-spacing: 0.05em; }
+
+        /* ── Hero ── */
+        .shop-hero {
+            padding: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 4vw, 4rem) 2rem;
+        }
+
+        .shop-hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        .shop-hero p {
+            font-size: 0.82rem;
+            color: var(--muted);
+            max-width: 40em;
+            margin-top: 1rem;
+            line-height: 1.7;
+        }
+
+        /* ── Product grid ── */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2.5rem;
+            padding: 2rem clamp(1.5rem, 4vw, 4rem) 6rem;
+        }
+
+        .product-card {
+            position: relative;
+        }
+
+        .product-card img {
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            object-fit: cover;
+            display: block;
+        }
+
+        .product-info {
+            padding: 1rem 0 0;
+        }
+
+        .product-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .product-price {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        .product-link {
+            display: inline-block;
+            margin-top: 0.75rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 0.4em 0;
+            border-bottom: 1px solid var(--accent);
+            transition: opacity 0.2s;
+        }
+
+        .product-link:hover { opacity: 0.7; }
+
+        /* Sold state */
+        .product-card.sold img {
+            opacity: 0.4;
+            filter: grayscale(0.6);
+        }
+
+        .product-card.sold .product-title,
+        .product-card.sold .product-price {
+            color: var(--muted);
+        }
+
+        .sold-badge {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            margin-top: 0.75rem;
+            display: inline-block;
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 2.5rem clamp(1.5rem, 4vw, 4rem);
+            border-top: 1px solid var(--text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .footer-copy {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .footer-nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-nav a {
+            font-size: 0.75rem;
+            color: var(--text);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .footer-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .footer-nav a:hover::after { width: 100%; }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Craft paper background -->
+    <div class="paper-bg"></div>
+
+    <!-- Film grain -->
+    <div class="grain" aria-hidden="true">
+        <svg>
+            <filter id="grain-filter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+                <feColorMatrix type="saturate" values="0"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#grain-filter)"/>
+        </svg>
+    </div>
+
+    <!-- Back nav -->
+    <nav class="back-nav" aria-label="Back to portfolio">
+        <a href="index.html" class="back-arrow">&larr;</a>
+        <a href="index.html">Portfolio</a>
+        <span class="back-title">/ Ceramics Shop</span>
+    </nav>
+
+    <!-- Hero -->
+    <section class="shop-hero">
+        <h1>Ceramics</h1>
+        <p>Wheel-thrown stoneware pieces — each one shaped by hand, glazed, and fired in a high-temperature reduction kiln. No two are alike.</p>
+    </section>
+
+    <!-- Product grid (rendered by JS) -->
+    <div class="product-grid" id="productGrid"></div>
+
+    <footer>
+        <span class="footer-copy">&copy; 2026 Sylvan Cummings</span>
+        <nav class="footer-nav" aria-label="Footer links">
+            <a href="index.html">Portfolio</a>
+            <a href="shop.html">Shop</a>
+            <a href="https://github.com/sylvan-cu" target="_blank" rel="noopener">GitHub</a>
+            <a href="mailto:sylvancummings@gmail.com">Email</a>
+        </nav>
+    </footer>
+
+    <script>
+        // ── Product data ──
+        // Replace stripeLink values with real Stripe Payment Links from your dashboard
+        const products = [
+            {
+                title: 'Patterned Cups (Set of 4)',
+                image: 'photos/patterned-cups-group.jpg',
+                price: '$120',
+                stripeLink: '#configure-in-stripe',
+                sold: false,
+            },
+            {
+                title: 'Altered Vase',
+                image: 'photos/altered-vase.jpg',
+                price: '$85',
+                stripeLink: '#configure-in-stripe',
+                sold: false,
+            },
+            {
+                title: 'Bottle Vases (Trio)',
+                image: 'photos/bottle-trio.jpg',
+                price: '$180',
+                stripeLink: '#configure-in-stripe',
+                sold: false,
+            },
+            {
+                title: 'Black Textured Vase',
+                image: 'photos/black-textured-2.jpg',
+                price: '$95',
+                stripeLink: '#configure-in-stripe',
+                sold: false,
+            },
+            {
+                title: 'Black Vase',
+                image: 'photos/black-vase.jpg',
+                price: '$75',
+                stripeLink: '#configure-in-stripe',
+                sold: false,
+            },
+        ];
+
+        // ── Render cards ──
+        const grid = document.getElementById('productGrid');
+
+        products.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card' + (product.sold ? ' sold' : '');
+
+            const img = document.createElement('img');
+            img.src = product.image;
+            img.alt = product.title;
+            img.loading = 'lazy';
+            card.appendChild(img);
+
+            const info = document.createElement('div');
+            info.className = 'product-info';
+
+            const title = document.createElement('h2');
+            title.className = 'product-title';
+            title.textContent = product.title;
+            info.appendChild(title);
+
+            const price = document.createElement('p');
+            price.className = 'product-price';
+            price.textContent = product.price;
+            info.appendChild(price);
+
+            if (product.sold) {
+                const badge = document.createElement('span');
+                badge.className = 'sold-badge';
+                badge.textContent = 'Sold';
+                info.appendChild(badge);
+            } else {
+                const link = document.createElement('a');
+                link.className = 'product-link';
+                link.href = product.stripeLink;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.textContent = 'Purchase';
+                info.appendChild(link);
+            }
+
+            card.appendChild(info);
+            grid.appendChild(card);
+        });
+
+        // ── Animated grain ──
+        (function() {
+            const turbulence = document.querySelector('#grain-filter feTurbulence');
+            if (!turbulence) return;
+            let seed = 0;
+            setInterval(() => {
+                seed = (seed + 1) % 10;
+                turbulence.setAttribute('seed', seed);
+            }, 100);
+        })();
+    </script>
+    <script src="editor.js"></script>
+</body>
+</html>
